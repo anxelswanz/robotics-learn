@@ -1,0 +1,1183 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>练习题：从旋转矩阵到正向运动学</title><style>
+:root{--bg:#faf9f5;--card:#ffffff;--soft:#f1efe8;--text:#1f1e1d;--sec:#5f5e5a;--muted:#888780;--border:#d3d1c7;--accent:#185FA5;--accent-bg:#E6F1FB}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2928;--soft:#333230;--text:#ecebe6;--sec:#b4b2a9;--muted:#888780;--border:#444441;--accent:#85B7EB;--accent-bg:#0C447C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.8;font-size:16px}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:28px;font-weight:500;margin:0 0 6px}
+h2{font-size:21px;font-weight:500;margin:48px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+h3{font-size:17px;font-weight:500;margin:24px 0 6px}
+p.lead{color:var(--sec);margin:0 0 24px}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:18px 0}
+.card iframe{width:100%;border:0;display:block;height:420px}
+.key{border-left:3px solid var(--accent);background:var(--accent-bg);padding:12px 16px;margin:18px 0}
+table{border-collapse:collapse;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--border);padding:6px 12px;text-align:left}
+th{background:var(--soft);font-weight:500}
+nav.toc{background:var(--soft);border-radius:10px;padding:12px 18px;margin:0 0 24px;font-size:15px}
+nav.toc a{color:var(--accent);text-decoration:none}
+</style></head><body><main>
+<h1>练习题：从旋转矩阵到正向运动学</h1>
+<p class="lead">一共 8 题，加上加练题。每道题都可以重新做：刷新页面即可清空。提交后会显示解析和动画。</p>
+<nav class="toc">第 1–3 题 旋转矩阵、右手定则 · 第 4 题 矩阵乘向量 · 第 5–6 题 四元数 · 第 7 题 齐次变换 · 第 8 题 两节机械臂（含分步讲解和 4 道加练）</nav>
+
+<h2>第 1 题 · 旋转矩阵的第 1 列</h2>
+<div class="card"><iframe id="f1" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.opt{display:block;width:100%;text-align:left;margin:0 0 8px;font-family:var(--font-mono)}
+.opt.sel{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.opt.ok{background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)}
+.opt.bad{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger)}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;点&quot;播放&quot;，看物体绕 &lt;b&gt;z 轴&lt;/b&gt;转 90°。转完以后，&lt;span style=&quot;color:#D85A30&quot;&gt;橙色的 x 箭头&lt;/span&gt;指向哪里？所以这个旋转矩阵的&lt;b&gt;第 1 列&lt;/b&gt;是什么？&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:280px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;button id=&quot;reset&quot;&gt;重来&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;0&quot;&gt;A. (1, 0, 0)&lt;/button&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;1&quot;&gt;B. (0, 1, 0)&lt;/button&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;2&quot;&gt;C. (−1, 0, 0)&lt;/button&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;3&quot;&gt;D. (0, −1, 0)&lt;/button&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:4px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const C={x:&#x27;#D85A30&#x27;,y:&#x27;#1D9E75&#x27;,z:&#x27;#7F77DD&#x27;};let a=0,anim=null,sel=null,done=false;
+function proj(p,W,H){const yaw=-0.65,pit=0.42,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.3;return[W/2+X*s,H/2-Y*s+10]}
+function ar(a,b,c,w,d){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.setLineDash(d?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!d){const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[c*p[0]-s*p[1],s*p[0]+c*p[1],p[2]],O=proj([0,0,0],W,H),m=css(&#x27;--text-muted&#x27;);
+ const lab=[[&#x27;x&#x27;,[1,0,0]],[&#x27;y&#x27;,[0,1,0]],[&#x27;z&#x27;,[0,0,1]]];
+ lab.forEach(([k,v])=&gt;{const e=proj(v.map(q=&gt;q*1.7),W,H);ar(O,e,m,1,true);ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;世界 &#x27;+k,e[0]+4,e[1]+12)});
+ const h=0.45,V=[];for(const i of[-h,h])for(const j of[-h,h])for(const k of[-h,h])V.push([i,j,k]);
+ const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],P=V.map(v=&gt;proj(R(v),W,H));
+ ctx.strokeStyle=css(&#x27;--text-secondary&#x27;);ctx.lineWidth=1;E.forEach(([i,j])=&gt;{ctx.beginPath();ctx.moveTo(...P[i]);ctx.lineTo(...P[j]);ctx.stroke()});
+ lab.forEach(([k,v])=&gt;{const e=proj(R(v).map(q=&gt;q*1.3),W,H);ar(O,e,C[k],3);ctx.fillStyle=C[k];ctx.font=&#x27;500 14px sans-serif&#x27;;ctx.fillText(k,e[0]+6,e[1]-6)});
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+function play(){if(anim)return;if(a&gt;=90)a=0;anim=setInterval(()=&gt;{a=Math.min(90,a+1.5);draw();if(a&gt;=90){clearInterval(anim);anim=null}},16)}
+$(&#x27;play&#x27;).onclick=play;$(&#x27;reset&#x27;).onclick=()=&gt;{clearInterval(anim);anim=null;a=0;draw()};
+document.querySelectorAll(&#x27;.opt&#x27;).forEach(b=&gt;b.onclick=()=&gt;{if(done)return;sel=+b.dataset.k;$(&#x27;err&#x27;).textContent=&#x27;&#x27;;document.querySelectorAll(&#x27;.opt&#x27;).forEach(x=&gt;x.classList.toggle(&#x27;sel&#x27;,x===b))});
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done){return}if(sel===null){$(&#x27;err&#x27;).textContent=&#x27;先选一个答案&#x27;;return}
+ done=true;const ok=sel===1;document.querySelectorAll(&#x27;.opt&#x27;).forEach(x=&gt;{x.classList.remove(&#x27;sel&#x27;);const k=+x.dataset.k;if(k===1)x.classList.add(&#x27;ok&#x27;);else if(k===sel)x.classList.add(&#x27;bad&#x27;)});
+ clearInterval(anim);anim=null;a=90;draw();
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${ok?&#x27;var(--text-success)&#x27;:&#x27;var(--text-danger)&#x27;}&quot;&gt;${ok?&#x27;答对了！&#x27;:&#x27;差一点，正确答案是 B。&#x27;}&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;绕 z 轴转 90°（从上往下看是逆时针），橙色的 x 箭头从&quot;世界 x&quot;转到了&quot;世界 y&quot;的位置，所以它的新坐标是 (0, 1, 0)。旋转矩阵的第 1 列，记录的就是&quot;x 轴转完以后到了哪里&quot;，所以第 1 列 = (0, 1, 0)。${ok?&#x27;&#x27;:&#x27;&lt;br&gt;如果你选了 D：注意右手定则，大拇指指向 z 轴正方向（朝上），四指弯曲方向是 x 转向 y，不是转向 −y。&#x27;}&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=1;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<div class="key">绕 z 轴正向转 90°，x 转到 <b>+y</b>（不是 −y）。看箭头去哪要<b>竖着读</b>：第 1 列永远是 (cos θ, sin θ, …)，没有负号；负号 −sin θ 在第 2 列，属于 y 箭头。<br>θ = 90° 时：第 1 列 = (cos 90°, sin 90°) = (0, 1)；第 2 列 = (−sin 90°, cos 90°) = (−1, 0)。</div>
+
+<h2>第 2 题 · 填出绕 x 轴的旋转矩阵</h2>
+<div class="card"><iframe id="f2" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.mx{display:grid;grid-template-columns:repeat(3,64px);gap:6px}
+.mx select{width:64px;height:36px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.mx select.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.mx select.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;点&quot;播放&quot;，看物体绕 &lt;b&gt;x 轴&lt;/b&gt;转 90°。观察三根箭头各自转到了哪里，然后把这个旋转矩阵完整填出来。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;button id=&quot;reset&quot;&gt;重来&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div class=&quot;mx&quot; id=&quot;mx&quot;&gt;&lt;/div&gt;
+    &lt;div style=&quot;display:grid;grid-template-columns:repeat(3,64px);gap:6px;font-size:12px;text-align:center;margin-top:6px&quot;&gt;
+      &lt;span style=&quot;color:#D85A30&quot;&gt;x 去哪&lt;/span&gt;&lt;span style=&quot;color:#1D9E75&quot;&gt;y 去哪&lt;/span&gt;&lt;span style=&quot;color:#7F77DD&quot;&gt;z 去哪&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const C={x:&#x27;#D85A30&#x27;,y:&#x27;#1D9E75&#x27;,z:&#x27;#7F77DD&#x27;};let a=0,anim=null,done=false,hints=0;
+const ANS=[[1,0,0],[0,0,-1],[0,1,0]];
+$(&#x27;mx&#x27;).innerHTML=[0,1,2].map(i=&gt;[0,1,2].map(j=&gt;`&lt;select data-i=&quot;${i}&quot; data-j=&quot;${j}&quot;&gt;&lt;option value=&quot;&quot;&gt;?&lt;/option&gt;&lt;option value=&quot;1&quot;&gt;1&lt;/option&gt;&lt;option value=&quot;0&quot;&gt;0&lt;/option&gt;&lt;option value=&quot;-1&quot;&gt;−1&lt;/option&gt;&lt;/select&gt;`).join(&#x27;&#x27;)).join(&#x27;&#x27;);
+document.querySelectorAll(&#x27;#mx select&#x27;).forEach(s=&gt;s.onchange=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+function proj(p,W,H){const yaw=-0.65,pit=0.42,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.3;return[W/2+X*s,H/2-Y*s+10]}
+function ar(a,b,c,w,d){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.setLineDash(d?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!d){const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[p[0],c*p[1]-s*p[2],s*p[1]+c*p[2]],O=proj([0,0,0],W,H),m=css(&#x27;--text-muted&#x27;);
+ const lab=[[&#x27;x&#x27;,[1,0,0]],[&#x27;y&#x27;,[0,1,0]],[&#x27;z&#x27;,[0,0,1]]];
+ lab.forEach(([k,v])=&gt;{const e=proj(v.map(q=&gt;q*1.7),W,H),e2=proj(v.map(q=&gt;q*-1.7),W,H);ar(e2,e,m,1,true);ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;世界 &#x27;+k,e[0]+4,e[1]+12)});
+ ctx.fillStyle=m;const xe=proj([-1.7,0,0],W,H);ctx.fillText(&#x27;旋转轴 = x&#x27;,xe[0]-70,xe[1]);
+ const h=0.45,V=[];for(const i of[-h,h])for(const j of[-h,h])for(const k of[-h,h])V.push([i,j,k]);
+ const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],P=V.map(v=&gt;proj(R(v),W,H));
+ ctx.strokeStyle=css(&#x27;--text-secondary&#x27;);ctx.lineWidth=1;E.forEach(([i,j])=&gt;{ctx.beginPath();ctx.moveTo(...P[i]);ctx.lineTo(...P[j]);ctx.stroke()});
+ lab.forEach(([k,v])=&gt;{const e=proj(R(v).map(q=&gt;q*1.3),W,H);ar(O,e,C[k],3);ctx.fillStyle=C[k];ctx.font=&#x27;500 14px sans-serif&#x27;;ctx.fillText(k,e[0]+6,e[1]-6)});
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+$(&#x27;play&#x27;).onclick=()=&gt;{if(anim)return;if(a&gt;=90)a=0;anim=setInterval(()=&gt;{a=Math.min(90,a+1.5);draw();if(a&gt;=90){clearInterval(anim);anim=null}},16)};
+$(&#x27;reset&#x27;).onclick=()=&gt;{clearInterval(anim);anim=null;a=0;draw()};
+const H=[&#x27;每一列 = 一根轴转完后到了哪里。先只看橙色 x 箭头：它是旋转轴，转了以后动了吗？&#x27;,&#x27;绿色 y 箭头原来指向世界 y，转完后指向了哪根世界轴？那根轴的单位向量就是第 2 列。&#x27;,&#x27;紫色 z 箭头转完后指向世界 y 的反方向，所以第 3 列里 y 的位置是 −1。&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+H[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const sels=[...document.querySelectorAll(&#x27;#mx select&#x27;)];
+ if(sels.some(s=&gt;s.value===&#x27;&#x27;)){$(&#x27;err&#x27;).textContent=&#x27;还有格子没填（显示 ? 的格子）&#x27;;return}
+ done=true;let wrong=0;sels.forEach(s=&gt;{const ok=+s.value===ANS[+s.dataset.i][+s.dataset.j];s.classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);s.disabled=true;if(!ok)wrong++});
+ clearInterval(anim);anim=null;a=90;draw();
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${wrong?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${wrong?`有 ${wrong} 格不对（红色的格子），看看下面的解析：`:&#x27;全对！&#x27;}&lt;/div&gt;
+ &lt;div style=&quot;font-family:var(--font-mono);font-size:14px;margin:6px 0&quot;&gt;⎡ 1  0   0 ⎤&lt;br&gt;⎢ 0  0  −1 ⎥&lt;br&gt;⎣ 0  1   0 ⎦&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;&lt;span style=&quot;color:#D85A30&quot;&gt;第 1 列 (1, 0, 0)&lt;/span&gt;：x 是旋转轴，原地不动。&lt;br&gt;
+ &lt;span style=&quot;color:#1D9E75&quot;&gt;第 2 列 (0, 0, 1)&lt;/span&gt;：y 箭头转到了世界 z 的位置（朝上）。&lt;br&gt;
+ &lt;span style=&quot;color:#7F77DD&quot;&gt;第 3 列 (0, −1, 0)&lt;/span&gt;：z 箭头转到了世界 y 的反方向。&lt;br&gt;
+ 对照公式：绕 x 轴的矩阵是 [1 0 0; 0 cosθ −sinθ; 0 sinθ cosθ]，θ = 90° 时 cos = 0、sin = 1，结果一样。右下角那个 2×2 就是 y-z 平面里的 2D 旋转。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=2;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+
+<h2>第 3 题 · 右手定则（先预测）</h2>
+<div class="card"><iframe id="f3" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.opt{display:block;width:100%;text-align:left;margin:0 0 8px}
+.opt.sel{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.opt.ok{background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)}
+.opt.bad{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger)}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;物体将绕 &lt;b&gt;y 轴&lt;/b&gt;按&lt;b&gt;正方向&lt;/b&gt;转 90°。不看动画，用右手定则想一想：&lt;span style=&quot;color:#7F77DD&quot;&gt;紫色的 z 箭头&lt;/span&gt;转完以后会指向哪里？&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+    &lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后才能播放&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;0&quot;&gt;A. 世界 x 正方向&lt;/button&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;1&quot;&gt;B. 世界 x 反方向&lt;/button&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;2&quot;&gt;C. 世界 y 正方向&lt;/button&gt;
+    &lt;button class=&quot;opt&quot; data-k=&quot;3&quot;&gt;D. 世界 z 反方向&lt;/button&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:4px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const C={x:&#x27;#D85A30&#x27;,y:&#x27;#1D9E75&#x27;,z:&#x27;#7F77DD&#x27;};let a=0,anim=null,sel=null,done=false,hints=0;
+function proj(p,W,H){const yaw=-0.65,pit=0.42,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.3;return[W/2+X*s,H/2-Y*s+10]}
+function ar(a,b,c,w,d){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.setLineDash(d?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!d){const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[c*p[0]+s*p[2],p[1],-s*p[0]+c*p[2]],O=proj([0,0,0],W,H),m=css(&#x27;--text-muted&#x27;);
+ const lab=[[&#x27;x&#x27;,[1,0,0]],[&#x27;y&#x27;,[0,1,0]],[&#x27;z&#x27;,[0,0,1]]];
+ lab.forEach(([k,v])=&gt;{const e=proj(v.map(q=&gt;q*1.7),W,H),e2=proj(v.map(q=&gt;q*-1.7),W,H);ar(e2,e,m,1,true);ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;世界 &#x27;+k,e[0]+4,e[1]+12)});
+ const ye=proj([0,1.95,0],W,H);ctx.fillStyle=&#x27;#1D9E75&#x27;;ctx.font=&#x27;500 12px sans-serif&#x27;;ctx.fillText(&#x27;旋转轴 y（正方向）&#x27;,ye[0]-40,ye[1]-6);
+ const h=0.45,V=[];for(const i of[-h,h])for(const j of[-h,h])for(const k of[-h,h])V.push([i,j,k]);
+ const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],P=V.map(v=&gt;proj(R(v),W,H));
+ ctx.strokeStyle=css(&#x27;--text-secondary&#x27;);ctx.lineWidth=1;E.forEach(([i,j])=&gt;{ctx.beginPath();ctx.moveTo(...P[i]);ctx.lineTo(...P[j]);ctx.stroke()});
+ lab.forEach(([k,v])=&gt;{const e=proj(R(v).map(q=&gt;q*1.3),W,H);ar(O,e,C[k],3);ctx.fillStyle=C[k];ctx.font=&#x27;500 14px sans-serif&#x27;;ctx.fillText(k,e[0]+6,e[1]-6)});
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+function play(){if(!done||anim)return;if(a&gt;=90)a=0;anim=setInterval(()=&gt;{a=Math.min(90,a+1.2);draw();if(a&gt;=90){clearInterval(anim);anim=null}},16)}
+$(&#x27;play&#x27;).onclick=play;
+document.querySelectorAll(&#x27;.opt&#x27;).forEach(b=&gt;b.onclick=()=&gt;{if(done)return;sel=+b.dataset.k;$(&#x27;err&#x27;).textContent=&#x27;&#x27;;document.querySelectorAll(&#x27;.opt&#x27;).forEach(x=&gt;x.classList.toggle(&#x27;sel&#x27;,x===b))});
+const HT=[&#x27;伸出右手，大拇指指向绿色 y 箭头的方向。四指弯曲的方向就是正向旋转。&#x27;,&#x27;右手定则的循环顺序是 x → y → z → x。绕 z 轴转时 x 转向 y；绕 x 轴转时 y 转向 z；那绕 y 轴转时，是谁转向谁？&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;2){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;if(sel===null){$(&#x27;err&#x27;).textContent=&#x27;先选一个答案&#x27;;return}
+ done=true;$(&#x27;lock&#x27;).textContent=&#x27;现在可以播放了，看看你的预测对不对&#x27;;const ok=sel===0;
+ document.querySelectorAll(&#x27;.opt&#x27;).forEach(x=&gt;{x.classList.remove(&#x27;sel&#x27;);const k=+x.dataset.k;if(k===0)x.classList.add(&#x27;ok&#x27;);else if(k===sel)x.classList.add(&#x27;bad&#x27;)});
+ play();
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${ok?&#x27;var(--text-success)&#x27;:&#x27;var(--text-danger)&#x27;}&quot;&gt;${ok?&#x27;预测正确！&#x27;:&#x27;正确答案是 A：世界 x 正方向。&#x27;}&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;循环顺序 x → y → z → x 里，z 后面接的是 x。所以绕 y 轴正向转时，是 &lt;b&gt;z 转向 x&lt;/b&gt;（不是 x 转向 z）。转 90° 后，z 箭头正好落在世界 x 正方向上，而 x 箭头落到了世界 z 的反方向。&lt;br&gt;
+ 这也解释了绕 y 轴旋转矩阵里 −sin 为什么在左下角：第 3 列（z 去哪）= (1, 0, 0)，右上角是 +sin；第 1 列（x 去哪）= (0, 0, −1)，左下角是 −sin。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=3;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<p>右手定则：大拇指指向旋转轴正方向，四指弯曲方向就是正向旋转。从轴的正上方看是逆时针。循环顺序 x → y → z → x。</p>
+
+<h2>第 4 题 · 用旋转矩阵转一个点</h2>
+<div class="card"><iframe id="f4" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:64px;height:36px;font-family:var(--font-mono);font-size:15px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mono{font-family:var(--font-mono);font-size:14px;line-height:1.5}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;物体绕 z 轴转 90°，旋转矩阵如下（就是第 1 题那个）。物体上有一个点 P = (2, 1, 1)。转完以后，P 在哪里？&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+    &lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后才能播放&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div class=&quot;mono&quot;&gt;R = ⎡ 0  −1  0 ⎤&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;⎢ 1   0  0 ⎥&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;⎣ 0   0  1 ⎦&lt;/div&gt;
+    &lt;div style=&quot;font-size:13px;color:var(--text-secondary);margin:12px 0 6px&quot;&gt;P 转完后的坐标 P&#x27; =&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:18px&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot; inputmode=&quot;decimal&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot; inputmode=&quot;decimal&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v2&quot; inputmode=&quot;decimal&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+let a=0,anim=null,done=false,hints=0;const P0=[2,1,1],ANS=[-1,2,1];
+function proj(p,W,H){const yaw=-0.75,pit=0.45,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.19;return[W/2+X*s,H/2-Y*s+20]}
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w,d){ln(a,b,c,w,d);if(d)return;const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[c*p[0]-s*p[1],s*p[0]+c*p[1],p[2]],pr=p=&gt;proj(p,W,H),O=pr([0,0,0]),m=css(&#x27;--text-muted&#x27;),b=css(&#x27;--border&#x27;);
+ for(let i=-2;i&lt;=3;i++){ln(pr([i,-2,0]),pr([i,3,0]),b,0.5);ln(pr([-2,i,0]),pr([3,i,0]),b,0.5)}
+ [[&#x27;x&#x27;,[3.2,0,0]],[&#x27;y&#x27;,[0,3.2,0]],[&#x27;z&#x27;,[0,0,2.4]]].forEach(([k,v])=&gt;{const e=pr(v);ar(O,e,m,1);ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;世界 &#x27;+k,e[0]+4,e[1]+12)});
+ [1,2].forEach(i=&gt;{ctx.fillStyle=m;ctx.font=&#x27;11px sans-serif&#x27;;const px=pr([i,0,0]),py=pr([0,i,0]);ctx.fillText(i,px[0]-3,px[1]+14);ctx.fillText(i,py[0]+6,py[1]+4)});
+ if(a&gt;0){ctx.strokeStyle=&#x27;rgba(216,90,48,.5)&#x27;;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();for(let k=0;k&lt;=a;k+=2){const tt=k*D,q=pr([Math.cos(tt)*2-Math.sin(tt)*1,Math.sin(tt)*2+Math.cos(tt)*1,1]);k?ctx.lineTo(...q):ctx.moveTo(...q)}ctx.stroke();ctx.setLineDash([])}
+ const p0=pr(P0),pb=pr([P0[0],P0[1],0]);ln(p0,pb,m,1,[2,3]);ctx.strokeStyle=m;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p0[0],p0[1],5,0,7);ctx.stroke();ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;P (2, 1, 1)&#x27;,p0[0]+8,p0[1]+4);
+ const q=R(P0);if(a&gt;0){const pq=pr(q),qb=pr([q[0],q[1],0]);ln(pq,qb,&#x27;#D85A30&#x27;,1,[2,3]);ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(pq[0],pq[1],6,0,7);ctx.fill();ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(&quot;P&#x27;&quot;,pq[0]-22,pq[1]-6)}
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+function play(){if(!done||anim)return;if(a&gt;=90)a=0;anim=setInterval(()=&gt;{a=Math.min(90,a+1.2);draw();if(a&gt;=90){clearInterval(anim);anim=null}},16)}
+$(&#x27;play&#x27;).onclick=play;
+[&#x27;v0&#x27;,&#x27;v1&#x27;,&#x27;v2&#x27;].forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+const HT=[&#x27;P = (2, 1, 1) 的意思是：2 根 x 箭头 + 1 根 y 箭头 + 1 根 z 箭头。&#x27;,&#x27;矩阵的三列分别是 x、y、z 箭头转完后的位置：(0, 1, 0)、(−1, 0, 0)、(0, 0, 1)。&#x27;,&#x27;P\&#x27; = 2 × (0, 1, 0) + 1 × (−1, 0, 0) + 1 × (0, 0, 1)，把对应位置加起来。&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const ids=[&#x27;v0&#x27;,&#x27;v1&#x27;,&#x27;v2&#x27;],vals=ids.map(id=&gt;$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(vals.some(v=&gt;v===&#x27;&#x27;||isNaN(+v))){$(&#x27;err&#x27;).textContent=&#x27;三个格子都要填数字&#x27;;return}
+ done=true;let wrong=0;ids.forEach((id,i)=&gt;{const ok=Math.abs(+vals[i]-ANS[i])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok)wrong++});
+ $(&#x27;lock&#x27;).textContent=&#x27;现在可以播放了，看 P 转到哪里&#x27;;play();
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${wrong?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${wrong?&#x27;有格子不对，正确答案是 P\&#x27; = (−1, 2, 1)&#x27;:&#x27;全对！P\&#x27; = (−1, 2, 1)&#x27;}&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;两种算法，结果一样：&lt;/div&gt;
+ &lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;按列：2 × (0, 1, 0) + 1 × (−1, 0, 0) + 1 × (0, 0, 1)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;= (0, 2, 0) + (−1, 0, 0) + (0, 0, 1) = (−1, 2, 1)&lt;br&gt;&lt;br&gt;按行：x = 0×2 + (−1)×1 + 0×1 = −1&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;y = 1×2 +   0×1  + 0×1 =  2&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;z = 0×2 +   0×1  + 1×1 =  1&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;注意 z 坐标没变：绕 z 轴转，高度不会变。动画里 P 沿着一个水平的圆弧走到 P&#x27;。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=4;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>解题思路</h3>
+<pre>1. 竖着读出三列：每一列是一根箭头转完后的位置
+   第 1 列 (0, 1, 0)   → x 箭头转到了 +y
+   第 2 列 (−1, 0, 0)  → y 箭头转到了 −x
+   第 3 列 (0, 0, 1)   → z 箭头没动
+2. P = (2, 1, 1) = 2 根 x 箭头 + 1 根 y 箭头 + 1 根 z 箭头
+3. 每根箭头换成转完后的样子：P' = 2×(0,1,0) + 1×(−1,0,0) + 1×(0,0,1)</pre>
+<div class="key"><b>顺序：</b>永远是矩阵在左、点竖着放在右，写成 R × P。矩阵乘法没有交换律：P 是 3×1，R 是 3×3，P × R 根本乘不了；把 P 横着写硬算 P × R，结果是 (1, −2, 1)，方向反了。<br><b>知识点：</b>线性代数里的"矩阵乘向量"；"P 的三个数当份数，乘 R 的三列再相加"叫<b>线性组合</b>。</div>
+
+<h3>加练 · 绕 x 轴转一个点</h3>
+<div class="card"><iframe id="f5" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:56px;height:34px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mono{font-family:var(--font-mono);font-size:14px;line-height:1.6}
+.mg{display:inline-grid;grid-template-columns:repeat(3,40px);gap:3px;font-family:var(--font-mono);font-size:14px;vertical-align:middle}
+.mg div{text-align:center;padding:4px 0;border-radius:4px}
+.k0{background:rgba(216,90,48,.16)}.k1{background:rgba(29,158,117,.16)}.k2{background:rgba(127,119,221,.18)}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;物体绕 x 轴转 90°，旋转矩阵 R 如下。物体上的点 P = (1, 2, 1)。按两步算出 P&#x27; = R × P。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:280px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+    &lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后才能播放&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div&gt;R = &lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;k0&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;k1&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;k2&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;k0&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;k1&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;k2&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;k0&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;k1&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;k2&quot;&gt;0&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div style=&quot;display:grid;grid-template-columns:repeat(3,40px);gap:3px;font-size:11px;text-align:center;margin:4px 0 0 26px&quot;&gt;&lt;span style=&quot;color:#D85A30&quot;&gt;x 去哪&lt;/span&gt;&lt;span style=&quot;color:#1D9E75&quot;&gt;y 去哪&lt;/span&gt;&lt;span style=&quot;color:#7F77DD&quot;&gt;z 去哪&lt;/span&gt;&lt;/div&gt;
+    &lt;div style=&quot;font-size:13px;color:var(--text-secondary);margin:14px 0 6px&quot;&gt;第 1 步：P 的三个数当&quot;份数&quot;，填进去&lt;/div&gt;
+    &lt;div class=&quot;mono&quot;&gt;P&#x27; = &lt;input class=&quot;in&quot; id=&quot;k0&quot;&gt;×&lt;span style=&quot;color:#D85A30&quot;&gt;第1列&lt;/span&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;+ &lt;input class=&quot;in&quot; id=&quot;k1&quot;&gt;×&lt;span style=&quot;color:#1D9E75&quot;&gt;第2列&lt;/span&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;+ &lt;input class=&quot;in&quot; id=&quot;k2&quot;&gt;×&lt;span style=&quot;color:#7F77DD&quot;&gt;第3列&lt;/span&gt;&lt;/div&gt;
+    &lt;div style=&quot;font-size:13px;color:var(--text-secondary);margin:12px 0 6px&quot;&gt;第 2 步：算出结果&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:17px&quot;&gt;P&#x27; = (&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+let a=0,anim=null,done=false,hints=0;const P0=[1,2,1],K=[1,2,1],ANS=[1,-1,2];
+function proj(p,W,H){const yaw=-0.75,pit=0.45,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.2;return[W/2+X*s,H/2-Y*s+10]}
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[p[0],c*p[1]-s*p[2],s*p[1]+c*p[2]],pr=p=&gt;proj(p,W,H),O=pr([0,0,0]),m=css(&#x27;--text-muted&#x27;),b=css(&#x27;--border&#x27;);
+ for(let i=-2;i&lt;=2;i++){ln(pr([i,-2,0]),pr([i,2.5,0]),b,0.5);ln(pr([-2,i,0]),pr([2.5,i,0]),b,0.5)}
+ [[&#x27;x&#x27;,[2.8,0,0]],[&#x27;y&#x27;,[0,2.8,0]],[&#x27;z&#x27;,[0,0,2.6]]].forEach(([k,v])=&gt;{const e=pr(v);ar(O,e,m,1);ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;世界 &#x27;+k,e[0]+4,e[1]+12)});
+ const xe=pr([-2.2,0,0]);ln(xe,O,m,1,[3,3]);ctx.fillStyle=m;ctx.fillText(&#x27;旋转轴 x&#x27;,xe[0]-56,xe[1]+4);
+ if(a&gt;0){ctx.strokeStyle=&#x27;rgba(216,90,48,.5)&#x27;;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();for(let k=0;k&lt;=a;k+=2){const tt=k*D,q=pr([1,Math.cos(tt)*2-Math.sin(tt)*1,Math.sin(tt)*2+Math.cos(tt)*1]);k?ctx.lineTo(...q):ctx.moveTo(...q)}ctx.stroke();ctx.setLineDash([])}
+ const p0=pr(P0),pb=pr([P0[0],P0[1],0]);ln(p0,pb,m,1,[2,3]);ctx.strokeStyle=m;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p0[0],p0[1],5,0,7);ctx.stroke();ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;P (1, 2, 1)&#x27;,p0[0]+8,p0[1]+4);
+ if(a&gt;0){const q=R(P0),pq=pr(q),qb=pr([q[0],q[1],0]);ln(pq,qb,&#x27;#D85A30&#x27;,1,[2,3]);ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(pq[0],pq[1],6,0,7);ctx.fill();ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(&quot;P&#x27;&quot;,pq[0]+8,pq[1]-6)}
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+function play(){if(!done||anim)return;if(a&gt;=90)a=0;anim=setInterval(()=&gt;{a=Math.min(90,a+1.2);draw();if(a&gt;=90){clearInterval(anim);anim=null}},16)}
+$(&#x27;play&#x27;).onclick=play;
+const IDS=[&#x27;k0&#x27;,&#x27;k1&#x27;,&#x27;k2&#x27;,&#x27;v0&#x27;,&#x27;v1&#x27;,&#x27;v2&#x27;];IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+const HT=[&#x27;第 1 步：P = (1, 2, 1)，三个&quot;份数&quot;就是 1、2、1，按顺序填。&#x27;,&#x27;三列分别是 (1, 0, 0)、(0, 0, 1)、(0, −1, 0)。所以 P\&#x27; = 1×(1, 0, 0) + 2×(0, 0, 1) + 1×(0, −1, 0)。&#x27;,&#x27;先各自乘：(1, 0, 0)、(0, 0, 2)、(0, −1, 0)，再把第 1 个数加第 1 个数、第 2 个数加第 2 个数……&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals=IDS.map(id=&gt;$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(vals.some(v=&gt;v===&#x27;&#x27;||isNaN(+v))){$(&#x27;err&#x27;).textContent=&#x27;六个格子都要填数字&#x27;;return}
+ done=true;const want=[...K,...ANS];let w1=0,w2=0;IDS.forEach((id,i)=&gt;{const ok=Math.abs(+vals[i]-want[i])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok){i&lt;3?w1++:w2++}});
+ $(&#x27;lock&#x27;).textContent=&#x27;现在可以播放了&#x27;;play();
+ const all=!w1&amp;&amp;!w2;
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${all?&#x27;var(--text-success)&#x27;:&#x27;var(--text-danger)&#x27;}&quot;&gt;${all?&#x27;全对！P\&#x27; = (1, −1, 2)&#x27;:(w1?&#x27;第 1 步有格子不对；&#x27;:&#x27;&#x27;)+(w2?&#x27;第 2 步有格子不对；&#x27;:&#x27;&#x27;)+&#x27;正确答案是 P\&#x27; = (1, −1, 2)&#x27;}&lt;/div&gt;
+ &lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;P&#x27; = 1 × &lt;span style=&quot;color:#D85A30&quot;&gt;(1, 0, 0)&lt;/span&gt; + 2 × &lt;span style=&quot;color:#1D9E75&quot;&gt;(0, 0, 1)&lt;/span&gt; + 1 × &lt;span style=&quot;color:#7F77DD&quot;&gt;(0, −1, 0)&lt;/span&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;= (1, 0, 0) + (0, 0, 2) + (0, −1, 0)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;= (1+0+0, 0+0−1, 0+2+0) = (1, −1, 2)&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;检查一下：绕 x 轴转，x 坐标不会变，所以 P&#x27; 的第 1 个数还是 1。动画里 P 绕着 x 轴画了一段竖直的圆弧。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=5;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+
+<h2>第 5 题 · 轴角 → 单位四元数</h2>
+<div class="card"><iframe id="f6" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:64px;height:36px;font-family:var(--font-mono);font-size:15px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mono{font-family:var(--font-mono);font-size:14px;line-height:1.7}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;物体绕 &lt;b&gt;z 轴&lt;/b&gt;（轴的方向 n = (0, 0, 1)）转 θ = &lt;b&gt;90°&lt;/b&gt;。点&quot;播放&quot;看看，然后用公式算出它的单位四元数 q = (w, x, y, z)。保留两位小数。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:270px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div class=&quot;mono&quot; style=&quot;background:var(--surface-1);border-radius:var(--radius);padding:8px 10px&quot;&gt;q = ( cos(θ/2),&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;sin(θ/2)·nx,&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;sin(θ/2)·ny,&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;sin(θ/2)·nz )&lt;/div&gt;
+    &lt;div style=&quot;display:grid;grid-template-columns:24px auto;gap:6px 8px;align-items:center;margin-top:12px;font-family:var(--font-mono)&quot;&gt;
+      &lt;span style=&quot;color:#888780&quot;&gt;w&lt;/span&gt;&lt;input class=&quot;in&quot; id=&quot;v0&quot; inputmode=&quot;decimal&quot;&gt;
+      &lt;span style=&quot;color:#D85A30&quot;&gt;x&lt;/span&gt;&lt;input class=&quot;in&quot; id=&quot;v1&quot; inputmode=&quot;decimal&quot;&gt;
+      &lt;span style=&quot;color:#1D9E75&quot;&gt;y&lt;/span&gt;&lt;input class=&quot;in&quot; id=&quot;v2&quot; inputmode=&quot;decimal&quot;&gt;
+      &lt;span style=&quot;color:#7F77DD&quot;&gt;z&lt;/span&gt;&lt;input class=&quot;in&quot; id=&quot;v3&quot; inputmode=&quot;decimal&quot;&gt;
+    &lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const C={x:&#x27;#D85A30&#x27;,y:&#x27;#1D9E75&#x27;,z:&#x27;#7F77DD&#x27;};let a=0,anim=null,done=false,hints=0;const r2=Math.SQRT1_2,ANS=[r2,0,0,r2];
+function proj(p,W,H){const yaw=-0.65,pit=0.42,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.3;return[W/2+X*s,H/2-Y*s+10]}
+function ar(a,b,c,w,d){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.setLineDash(d?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!d){const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[c*p[0]-s*p[1],s*p[0]+c*p[1],p[2]],O=proj([0,0,0],W,H),m=css(&#x27;--text-muted&#x27;);
+ ar(proj([0,0,-1.6],W,H),proj([0,0,1.8],W,H),&#x27;#EF9F27&#x27;,2);const ze=proj([0,0,1.8],W,H);ctx.fillStyle=&#x27;#EF9F27&#x27;;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(&#x27;轴 n = (0, 0, 1)&#x27;,ze[0]+8,ze[1]+4);
+ const h=0.45,V=[];for(const i of[-h,h])for(const j of[-h,h])for(const k of[-h,h])V.push([i,j,k]);
+ const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],P=V.map(v=&gt;proj(R(v),W,H));
+ ctx.strokeStyle=css(&#x27;--text-secondary&#x27;);ctx.lineWidth=1;E.forEach(([i,j])=&gt;{ctx.beginPath();ctx.moveTo(...P[i]);ctx.lineTo(...P[j]);ctx.stroke()});
+ [[&#x27;x&#x27;,[1,0,0]],[&#x27;y&#x27;,[0,1,0]]].forEach(([k,v])=&gt;{ar(O,proj(v.map(q=&gt;q*1.3),W,H),m,1,true);const e=proj(R(v).map(q=&gt;q*1.3),W,H);ar(O,e,C[k],3);ctx.fillStyle=C[k];ctx.font=&#x27;500 14px sans-serif&#x27;;ctx.fillText(k,e[0]+6,e[1]-6)});
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+$(&#x27;play&#x27;).onclick=()=&gt;{if(anim)return;if(a&gt;=90)a=0;anim=setInterval(()=&gt;{a=Math.min(90,a+1.2);draw();if(a&gt;=90){clearInterval(anim);anim=null}},16)};
+const IDS=[&#x27;v0&#x27;,&#x27;v1&#x27;,&#x27;v2&#x27;,&#x27;v3&#x27;];IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+const HT=[&#x27;先算半角：θ/2 = 90° ÷ 2 = 45°。&#x27;,&#x27;cos 45° = sin 45° ≈ 0.71。&#x27;,&#x27;轴 n = (0, 0, 1)，所以 nx = 0、ny = 0、nz = 1。x、y、z 分别是 sin 45° 乘上这三个数。&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals=IDS.map(id=&gt;$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(vals.some(v=&gt;v===&#x27;&#x27;||isNaN(+v))){$(&#x27;err&#x27;).textContent=&#x27;四个格子都要填数字&#x27;;return}
+ done=true;let w=0;IDS.forEach((id,i)=&gt;{const ok=Math.abs(+vals[i]-ANS[i])&lt;0.015;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok)w++});
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${w?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${w?&#x27;有格子不对，正确答案是 q = (0.71, 0, 0, 0.71)&#x27;:&#x27;全对！q = (0.71, 0, 0, 0.71)&#x27;}&lt;/div&gt;
+ &lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;θ/2 = 45°&lt;br&gt;w = cos 45°     = 0.71&lt;br&gt;x = sin 45° × 0 = 0&lt;br&gt;y = sin 45° × 0 = 0&lt;br&gt;z = sin 45° × 1 = 0.71&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;检验一下&quot;单位&quot;：0.71² + 0² + 0² + 0.71² = 0.5 + 0.5 = 1 ✓&lt;br&gt;
+ 读法：x、y 都是 0、只有 z 有值，说明轴是 z 轴；w = 0.71（不是 1），说明确实转了一个角度。&lt;br&gt;
+ ${w&amp;&amp;Math.abs(+vals[0])&lt;0.02?&#x27;如果你把 w 填成了 0：那是 cos 90°。记得公式里用的是&lt;b&gt;半角&lt;/b&gt; θ/2 = 45°。&#x27;:&#x27;&#x27;}&lt;/div&gt;`;
+ a=90;draw()};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=6;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+
+<h2>第 6 题 · 读懂四元数</h2>
+<div class="card"><iframe id="f7" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.q{font-size:14px;margin:0 0 6px;color:var(--text-primary)}
+.og{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.og button{flex:1;min-width:64px}
+.og button.sel{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.og button.ok{background:var(--bg-success);color:var(--text-success);border-color:var(--border-success)}
+.og button.bad{background:var(--bg-danger);color:var(--text-danger);border-color:var(--border-danger)}
+.mono{font-family:var(--font-mono);font-size:14px;line-height:1.7}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:12px&quot;&gt;某个姿态的单位四元数是 &lt;span class=&quot;mono&quot; style=&quot;background:var(--surface-1);padding:2px 8px;border-radius:6px&quot;&gt;q = (0, 1, 0, 0)&lt;/span&gt;，顺序是 (w, x, y, z)。回答下面三个小问题。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;div class=&quot;q&quot;&gt;① 绕哪根轴转？&lt;/div&gt;
+    &lt;div class=&quot;og&quot; data-g=&quot;0&quot;&gt;&lt;button data-k=&quot;0&quot;&gt;x 轴&lt;/button&gt;&lt;button data-k=&quot;1&quot;&gt;y 轴&lt;/button&gt;&lt;button data-k=&quot;2&quot;&gt;z 轴&lt;/button&gt;&lt;/div&gt;
+    &lt;div class=&quot;q&quot;&gt;② 转了多少度？&lt;/div&gt;
+    &lt;div class=&quot;og&quot; data-g=&quot;1&quot;&gt;&lt;button data-k=&quot;0&quot;&gt;0°&lt;/button&gt;&lt;button data-k=&quot;1&quot;&gt;90°&lt;/button&gt;&lt;button data-k=&quot;2&quot;&gt;180°&lt;/button&gt;&lt;button data-k=&quot;3&quot;&gt;360°&lt;/button&gt;&lt;/div&gt;
+    &lt;div class=&quot;q&quot;&gt;③ −q = (0, −1, 0, 0) 表示什么姿态？&lt;/div&gt;
+    &lt;div class=&quot;og&quot; data-g=&quot;2&quot; style=&quot;flex-direction:column&quot;&gt;&lt;button data-k=&quot;0&quot;&gt;和 q 完全一样的姿态&lt;/button&gt;&lt;button data-k=&quot;1&quot;&gt;往反方向转，是另一个姿态&lt;/button&gt;&lt;button data-k=&quot;2&quot;&gt;不是合法的四元数&lt;/button&gt;&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:280px&quot;&gt;&lt;/canvas&gt;
+    &lt;div style=&quot;display:flex;gap:8px;align-items:center&quot;&gt;&lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;&lt;span id=&quot;ang&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-left:auto&quot;&gt;转角 0°&lt;/span&gt;&lt;/div&gt;
+    &lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后才会显示旋转轴并能播放&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const C={x:&#x27;#D85A30&#x27;,y:&#x27;#1D9E75&#x27;,z:&#x27;#7F77DD&#x27;};let a=0,anim=null,done=false,hints=0;const sel=[null,null,null],ANS=[0,2,0];
+function proj(p,W,H){const yaw=-0.65,pit=0.42,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*0.3;return[W/2+X*s,H/2-Y*s+10]}
+function ar(a,b,c,w,d){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.setLineDash(d?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!d){const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=a*D,c=Math.cos(t),s=Math.sin(t),R=p=&gt;[p[0],c*p[1]-s*p[2],s*p[1]+c*p[2]],O=proj([0,0,0],W,H),m=css(&#x27;--text-muted&#x27;);
+ if(done){ar(proj([-1.7,0,0],W,H),proj([1.9,0,0],W,H),&#x27;#EF9F27&#x27;,2);const e=proj([1.9,0,0],W,H);ctx.fillStyle=&#x27;#EF9F27&#x27;;ctx.font=&#x27;500 12px sans-serif&#x27;;ctx.fillText(&#x27;轴 = x&#x27;,e[0]+6,e[1]+4)}
+ const h=0.45,V=[];for(const i of[-h,h])for(const j of[-h,h])for(const k of[-h,h])V.push([i,j,k]);
+ const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],P=V.map(v=&gt;proj(R(v),W,H));
+ ctx.strokeStyle=css(&#x27;--text-secondary&#x27;);ctx.lineWidth=1;E.forEach(([i,j])=&gt;{ctx.beginPath();ctx.moveTo(...P[i]);ctx.lineTo(...P[j]);ctx.stroke()});
+ [[&#x27;x&#x27;,[1,0,0]],[&#x27;y&#x27;,[0,1,0]],[&#x27;z&#x27;,[0,0,1]]].forEach(([k,v])=&gt;{ar(O,proj(v.map(q=&gt;q*1.3),W,H),m,1,true);const e=proj(R(v).map(q=&gt;q*1.3),W,H);ar(O,e,C[k],3);ctx.fillStyle=C[k];ctx.font=&#x27;500 14px sans-serif&#x27;;ctx.fillText(k,e[0]+6,e[1]-6)});
+ $(&#x27;ang&#x27;).textContent=&#x27;转角 &#x27;+Math.round(a)+&#x27;°&#x27;}
+function play(){if(!done||anim)return;if(a&gt;=180)a=0;anim=setInterval(()=&gt;{a=Math.min(180,a+1.5);draw();if(a&gt;=180){clearInterval(anim);anim=null}},16)}
+$(&#x27;play&#x27;).onclick=play;
+document.querySelectorAll(&#x27;.og&#x27;).forEach(g=&gt;g.querySelectorAll(&#x27;button&#x27;).forEach(b=&gt;b.onclick=()=&gt;{if(done)return;sel[+g.dataset.g]=+b.dataset.k;$(&#x27;err&#x27;).textContent=&#x27;&#x27;;g.querySelectorAll(&#x27;button&#x27;).forEach(x=&gt;x.classList.toggle(&#x27;sel&#x27;,x===b))}));
+const HT=[&#x27;① 看 (x, y, z) 三个数里哪个不是 0：轴的方向就是它。&#x27;,&#x27;② w = cos(θ/2) = 0。cos 多少度等于 0？那个角度是 θ/2，记得再乘 2。&#x27;,&#x27;③ 回忆第 3 步：转 360° 时物体回到原样，可 q 变成了负的。&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;if(sel.some(v=&gt;v===null)){$(&#x27;err&#x27;).textContent=&#x27;三个小问题都要选&#x27;;return}
+ done=true;let w=0;document.querySelectorAll(&#x27;.og&#x27;).forEach(g=&gt;{const gi=+g.dataset.g;g.querySelectorAll(&#x27;button&#x27;).forEach(x=&gt;{x.classList.remove(&#x27;sel&#x27;);const k=+x.dataset.k;if(k===ANS[gi])x.classList.add(&#x27;ok&#x27;);else if(k===sel[gi])x.classList.add(&#x27;bad&#x27;)});if(sel[gi]!==ANS[gi])w++});
+ $(&#x27;lock&#x27;).textContent=&#x27;现在可以播放：绕 x 轴转 180°&#x27;;draw();play();
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${w?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${w?`有 ${w} 个小问题不对，看看解析：`:&#x27;三个全对！&#x27;}&lt;/div&gt;
+ &lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;q = (w, x, y, z) = (cos(θ/2), sin(θ/2)·n)&lt;br&gt;&lt;br&gt;① (x, y, z) = (1, 0, 0)，只有 x 有值 → 轴 n = x 轴&lt;br&gt;② w = cos(θ/2) = 0 → θ/2 = 90° → θ = 180°&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;验算：sin 90° × (1, 0, 0) = (1, 0, 0) ✓&lt;br&gt;③ −q 和 q 永远表示同一个姿态&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;关于 ③：−q = (0, −1, 0, 0) 可以看成&quot;绕 x 轴转 540°&quot;（多转一整圈），也可以看成&quot;绕 −x 轴转 180°&quot;。不管哪种看法，物体最后的样子都一样。它的平方和也是 1，所以是合法的单位四元数。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=7;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<p>−q 的四个数要<b>全部</b>变号。只把 w 变号得到 (−w, x, y, z)，代表绕同一根轴往反方向转 θ，是另一个姿态。</p>
+
+<h2>第 7 题 · 车上的点在世界里哪</h2>
+<div class="card"><iframe id="f8" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:56px;height:34px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mono{font-family:var(--font-mono);font-size:14px;line-height:1.7}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;小车的位置是 t = (2, 1)，朝向 θ = 90°（车头朝上）。车上有一个点 P，在&lt;b&gt;小车自己的坐标系&lt;/b&gt;里是 p = (1, 0)，也就是车头正前方 1 的位置。P 在世界里的坐标是多少？&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;
+    &lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后显示点 P 和计算过程&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div style=&quot;font-size:13px;color:var(--text-secondary);margin-bottom:6px&quot;&gt;第 1 步：先转，R × p =&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:17px&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;)&lt;/div&gt;
+    &lt;div style=&quot;font-size:13px;color:var(--text-secondary);margin:14px 0 6px&quot;&gt;第 2 步：再移，加上 t = (2, 1)，P 在世界里 =&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:17px&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v3&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:14px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;);
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;,CR=&#x27;#7F77DD&#x27;,CT=&#x27;#EF9F27&#x27;;let done=false,hints=0,k=0,anim=null;const ANS=[0,1,2,2];
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w,d){ln(a,b,c,w,d);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.fillText(s,p[0],p[1])}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ sc=Math.min(W/5.4,H/4.2);ox=(W-4.4*sc)/2+0.8*sc;oy=H-0.7*sc;const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=-1;x&lt;=4;x++){ln(P(x,-0.5),P(x,3.4),b,0.5);tx(String(x),[P(x,0)[0]-4,P(x,0)[1]+16],m)}for(let y=0;y&lt;=3;y++){ln(P(-0.8,y),P(4,y),b,0.5);if(y)tx(String(y),[P(0,y)[0]-14,P(0,y)[1]+4],m)}
+ ar(P(0,0),P(0.8,0),m,1.2);ar(P(0,0),P(0,0.8),m,1.2);tx(&#x27;世界&#x27;,[P(0,0)[0]-34,P(0,0)[1]+16],m);
+ const body=[[-0.35,-0.25],[0.35,-0.25],[0.35,0.25],[-0.35,0.25]].map(([u,v])=&gt;P(2-v,1+u));
+ ctx.fillStyle=&#x27;rgba(136,135,128,.18)&#x27;;ctx.strokeStyle=css(&#x27;--text-secondary&#x27;);ctx.lineWidth=1;ctx.beginPath();body.forEach((p,i)=&gt;i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fill();ctx.stroke();
+ ar(P(2,1),P(2,1.85),CX,2.5);ar(P(2,1),P(1.15,1),CY,2.5);tx(&#x27;车 x（车头）&#x27;,[P(2,1.85)[0]+6,P(2,1.85)[1]+4],CX,1);tx(&#x27;车 y&#x27;,[P(1.15,1)[0]-34,P(1.15,1)[1]-6],CY,1);
+ ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(2,1),3.5,0,7);ctx.fill();tx(&#x27;(2, 1)&#x27;,[P(2,1)[0]+6,P(2,1)[1]+16],pri);
+ if(done){const f=Math.min(1,k);
+  ar(P(0,0),P(2,1),CT,1.5,[5,4]);
+  if(f&gt;0)ar(P(2,1),P(2,1+f),CR,2,[5,4]);
+  if(f&gt;=1){const q=P(2,2);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(q[0],q[1],6,0,7);ctx.fill();tx(&#x27;P (2, 2)&#x27;,[q[0]+10,q[1]-6],pri,1)}}}
+const IDS=[&#x27;v0&#x27;,&#x27;v1&#x27;,&#x27;v2&#x27;,&#x27;v3&#x27;];IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+const HT=[&#x27;θ = 90°：R = [cos90 −sin90; sin90 cos90] = [0 −1; 1 0]。&#x27;,&#x27;R × p = 1 × (第 1 列) + 0 × (第 2 列)，第 1 列是 (0, 1)。&#x27;,&#x27;第 2 步就是把第 1 步的结果和 (2, 1) 对应相加。&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals=IDS.map(id=&gt;$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(vals.some(v=&gt;v===&#x27;&#x27;||isNaN(+v))){$(&#x27;err&#x27;).textContent=&#x27;四个格子都要填数字&#x27;;return}
+ done=true;let w1=0,w2=0;IDS.forEach((id,i)=&gt;{const ok=Math.abs(+vals[i]-ANS[i])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok){i&lt;2?w1++:w2++}});
+ $(&#x27;lock&#x27;).textContent=&#x27;琥珀色虚线 = 平移 t，紫色虚线 = 转过的 R × p&#x27;;k=0;anim=setInterval(()=&gt;{k+=0.03;draw();if(k&gt;=1){clearInterval(anim)}},16);
+ const all=!w1&amp;&amp;!w2;
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${all?&#x27;var(--text-success)&#x27;:&#x27;var(--text-danger)&#x27;}&quot;&gt;${all?&#x27;全对！P 在世界里是 (2, 2)&#x27;:(w1?&#x27;第 1 步不对；&#x27;:&#x27;&#x27;)+(w2?&#x27;第 2 步不对；&#x27;:&#x27;&#x27;)+&#x27;正确答案：R × p = (0, 1)，P 在世界里 = (2, 2)&#x27;}&lt;/div&gt;
+ &lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;第 1 步：R = ⎡0 −1⎤，R × p = 1 × (0, 1) + 0 × (−1, 0) = (0, 1)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;⎣1  0⎦&lt;br&gt;第 2 步：(0, 1) + (2, 1) = (2, 2)&lt;br&gt;&lt;br&gt;一步到位（齐次变换）：&lt;br&gt;⎡0 −1 2⎤   ⎡1⎤   ⎡0×1 + (−1)×0 + 2×1⎤   ⎡2⎤&lt;br&gt;⎢1  0 1⎥ × ⎢0⎥ = ⎢1×1 +   0×0  + 1×1⎥ = ⎢2⎥&lt;br&gt;⎣0  0 1⎦   ⎣1⎦   ⎣        1         ⎦   ⎣1⎦&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;直观检查：车头朝上，P 在车头正前方 1，所以 P 就在小车 (2, 1) 正上方 1 格，也就是 (2, 2)。&lt;br&gt;(0, 1) 是&quot;从小车到 P 的箭头，用世界方向描述&quot;，起点还是小车；加上小车的位置 (2, 1) 后，才是 P 在世界里的坐标。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=8;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<pre>三组数说的是不同的东西：
+(1, 0)  P 在小车坐标系里         "沿车头走 1，沿车 y 走 0"
+(0, 1)  从小车到 P 的箭头，       "沿世界 x 走 0，沿世界 y 走 1"
+        用世界方向描述（起点还是小车）
+(2, 2)  P 在世界里的位置          再加上小车自己的位置 (2, 1)</pre>
+
+<h2>第 8 题 · 两节机械臂（正向运动学）</h2>
+<div class="card"><iframe id="f9" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:52px;height:34px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.6;white-space:pre}
+.mg{display:inline-grid;grid-template-columns:repeat(3,34px);gap:2px;font-family:var(--font-mono);font-size:13px;vertical-align:middle}
+.mg div{text-align:center;padding:3px 0;border-radius:4px;background:var(--surface-1)}
+.mg .t{background:rgba(239,159,39,.24)}.mg .r{background:rgba(127,119,221,.18)}
+.lb{font-size:13px;color:var(--text-secondary);margin:12px 0 5px}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:10px&quot;&gt;底座 A 在世界原点。第一节手臂长 2，第二节长 1。关节 1 转 θ₁ = &lt;b&gt;90°&lt;/b&gt;，关节 2 转 θ₂ = &lt;b&gt;−90°&lt;/b&gt;。两个矩阵已经写好了，按三步算出末端在哪。&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:6px&quot;&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary)&quot;&gt;T_WA（A 在世界里，θ₁ = 90°）&lt;/div&gt;&lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary)&quot;&gt;T_AB（B 在 A 里，θ₂ = −90°，距离 2）&lt;/div&gt;&lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;
+    &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:300px&quot;&gt;&lt;/canvas&gt;
+    &lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后显示机械臂&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div class=&quot;lb&quot; style=&quot;margin-top:0&quot;&gt;① 关节 B 在世界里的位置 = T_WA × (2, 0, 1)&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:16px&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;)&lt;/div&gt;
+    &lt;div class=&quot;lb&quot;&gt;② B 的 x 轴在世界里朝哪 = T_WA × (0, −1, 0)&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:16px&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v3&quot;&gt;)&lt;/div&gt;
+    &lt;div class=&quot;lb&quot;&gt;③ 末端（在 B 里是 (1, 0)）在世界里 = B 的位置 + 1 × B 的 x 轴&lt;/div&gt;
+    &lt;div style=&quot;display:flex;align-items:center;gap:4px;font-size:16px&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v4&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v5&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;let done=false,hints=0,k=0,anim=null;const ANS=[0,2,1,0,1,2];
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.fillText(s,p[0],p[1])}
+function frame(o,th,nm){const c=Math.cos(th),s=Math.sin(th);ar(P(...o),P(o[0]+0.7*c,o[1]+0.7*s),CX,2.5);ar(P(...o),P(o[0]-0.7*s,o[1]+0.7*c),CY,2.5);tx(nm,[P(...o)[0]-18,P(...o)[1]+16],css(&#x27;--text-primary&#x27;),1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ sc=Math.min(W/4.6,H/3.6);ox=W/2-0.6*sc;oy=H-0.6*sc;const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=-2;x&lt;=3;x++){ln(P(x,-0.4),P(x,3),b,0.5);tx(String(x),[P(x,0)[0]-4,P(x,0)[1]+16],m)}for(let y=0;y&lt;=3;y++){ln(P(-2,y),P(3,y),b,0.5);if(y)tx(String(y),[P(0,y)[0]-14,P(0,y)[1]+4],m)}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillRect(P(0,0)[0]-14,P(0,0)[1],28,8);
+ if(!done){frame([0,0],0,&#x27;A&#x27;);tx(&#x27;（机械臂转动前，A 的朝向）&#x27;,[P(0,0)[0]+10,P(0,0)[1]-30],m);return}
+ const f=Math.min(1,k),t1=90*D*f,t2=-90*D*f,Bx=[-2*Math.sin(t1),2*Math.cos(t1)],th=t1+t2,E=[Bx[0]+Math.cos(th),Bx[1]+Math.sin(th)];
+ ctx.lineCap=&#x27;round&#x27;;ln(P(0,0),P(...Bx),&#x27;rgba(136,135,128,.45)&#x27;,12);ln(P(...Bx),P(...E),&#x27;rgba(136,135,128,.45)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ frame([0,0],t1,&#x27;A&#x27;);frame(Bx,th,&#x27;B&#x27;);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(...E),5,0,7);ctx.fill();
+ if(f&gt;=1){tx(&#x27;B (0, 2)&#x27;,[P(...Bx)[0]-64,P(...Bx)[1]-8],pri,1);tx(&#x27;末端 (1, 2)&#x27;,[P(...E)[0]+8,P(...E)[1]-8],pri,1)}}
+const IDS=[&#x27;v0&#x27;,&#x27;v1&#x27;,&#x27;v2&#x27;,&#x27;v3&#x27;,&#x27;v4&#x27;,&#x27;v5&#x27;];IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+const HT=[&#x27;① 用&quot;份数&quot;的想法：(2, 0, 1) = 2 × T_WA 第 1 列 + 0 × 第 2 列 + 1 × 第 3 列。T_WA 第 1 列是 (0, 1)，第 3 列是 (0, 0)。&#x27;,&#x27;② (0, −1, 0) 来自 T_AB 的第 1 列（B 的 x 轴在 A 里朝哪）。= 0 × 第 1 列 + (−1) × 第 2 列 + 0 × 第 3 列，T_WA 第 2 列是 (−1, 0)。&#x27;,&#x27;③ 末端在 B 的 x 轴上 1 远：B 的位置 + 1 × B 的 x 轴，把 ① 和 ② 的结果对应相加。&#x27;];
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;3){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+HT[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals=IDS.map(id=&gt;$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(vals.some(v=&gt;v===&#x27;&#x27;||isNaN(+v))){$(&#x27;err&#x27;).textContent=&#x27;六个格子都要填数字&#x27;;return}
+ done=true;const wr=[0,0,0];IDS.forEach((id,i)=&gt;{const ok=Math.abs(+vals[i]-ANS[i])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok)wr[Math.floor(i/2)]++});
+ $(&#x27;lock&#x27;).textContent=&#x27;关节 1 转 90°，关节 2 转 −90°&#x27;;k=0;anim=setInterval(()=&gt;{k+=0.015;draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=wr.map((v,i)=&gt;v?&#x27;①②③&#x27;[i]:&#x27;&#x27;).join(&#x27;&#x27;);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad?`第 ${bad.split(&#x27;&#x27;).join(&#x27;、&#x27;)} 步有错，看看解析：`:&#x27;全对！你已经会算正向运动学了。&#x27;}&lt;/div&gt;
+&lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;① ⎡ 0  −1  0 ⎤   ⎡ 2 ⎤
+   ⎢ 1   0  0 ⎥ × ⎢ 0 ⎥    第 1 行：0×2 + (−1)×0 + 0×1 = 0
+   ⎣ 0   0  1 ⎦   ⎣ 1 ⎦    第 2 行：1×2 +   0×0  + 0×1 = 2   → B = (0, 2)
+
+② ⎡ 0  −1  0 ⎤   ⎡  0 ⎤
+   ⎢ 1   0  0 ⎥ × ⎢ −1 ⎥   第 1 行：0×0 + (−1)×(−1) + 0×0 = 1
+   ⎣ 0   0  1 ⎦   ⎣  0 ⎦   第 2 行：1×0 +   0×(−1)  + 0×0 = 0  → x_B = (1, 0) 朝右
+
+③ 末端 = (0, 2) + 1 × (1, 0) = (1, 2)&lt;/div&gt;
+&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;直观检查：手臂先竖直往上伸 2，到 B 后向右拐 90°，再往右伸 1，末端就在 (1, 2)。&lt;br&gt;点（B 的位置）补 1，方向（x_B）补 0。&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=9;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>第 8 题分步讲解</h3>
+<p>点"下一步"，转动关节的两步会自动播放动画。</p>
+<div class="card"><iframe id="f10" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.pill{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-size:13px;border:0.5px solid var(--border-strong);color:var(--text-secondary);cursor:pointer}
+.pill.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.m{display:inline-grid;grid-template-columns:repeat(3,38px);gap:3px;font-family:var(--font-mono);font-size:13px;vertical-align:middle}
+.m div{text-align:center;padding:4px 0;border-radius:4px;background:var(--surface-1);color:var(--text-secondary)}
+.m .c0{background:rgba(216,90,48,.18);color:var(--text-primary)}.m .c1{background:rgba(29,158,117,.18);color:var(--text-primary)}.m .c2{background:rgba(239,159,39,.26);color:var(--text-primary)}
+.cal{font-family:var(--font-mono);font-size:14px;line-height:1.9}
+.nt{font-size:14px;color:var(--text-secondary);line-height:1.8}
+&lt;/style&gt;
+&lt;div style=&quot;display:flex;align-items:center;gap:8px;margin:0 0 12px&quot;&gt;
+  &lt;div id=&quot;pills&quot; style=&quot;display:flex;gap:6px&quot;&gt;&lt;/div&gt;
+  &lt;button id=&quot;replay&quot; style=&quot;margin-left:auto&quot;&gt;重播&lt;/button&gt;
+  &lt;button id=&quot;prev&quot;&gt;上一步&lt;/button&gt;
+  &lt;button id=&quot;next&quot;&gt;下一步&lt;/button&gt;
+&lt;/div&gt;
+&lt;div id=&quot;title&quot; style=&quot;font-size:16px;font-weight:500;margin:0 0 10px&quot;&gt;&lt;/div&gt;
+&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:330px&quot;&gt;&lt;/canvas&gt;
+&lt;div id=&quot;panel&quot; style=&quot;margin-top:12px&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;,CT=&#x27;#EF9F27&#x27;,CP=&#x27;#7F77DD&#x27;;
+const TT=[&#x27;第 1 步：题目在说什么&#x27;,&#x27;第 2 步：关节 1 转 90°，读出 T_WA&#x27;,&#x27;第 3 步：关节 2 转 −90°，读出 T_AB&#x27;,&#x27;第 4 步：① 算关节 B 在世界里的位置&#x27;,&#x27;第 5 步：② 算 B 的 x 轴在世界里朝哪&#x27;,&#x27;第 6 步：③ 算末端在世界里的位置&#x27;];
+let step=0,p=1,anim=null;
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w,d){ln(a,b,c,w,d);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;}
+function dot(q,c,r){ctx.fillStyle=c;ctx.beginPath();ctx.arc(q[0],q[1],r,0,7);ctx.fill()}
+function frame(o,th,nm,w){const c=Math.cos(th),s=Math.sin(th),L=0.75,ex=[o[0]+L*c,o[1]+L*s],ey=[o[0]-L*s,o[1]+L*c];
+ ar(P(...o),P(...ex),CX,w);ar(P(...o),P(...ey),CY,w);tx(&#x27;x&#x27;+nm,[P(...ex)[0]+5,P(...ex)[1]+4],CX,1);tx(&#x27;y&#x27;+nm,[P(...ey)[0]+4,P(...ey)[1]-4],CY,1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ sc=Math.min(W/7,H/4);ox=W*0.42;oy=H-0.55*sc;const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=-2;x&lt;=3;x++){ln(P(x,-0.3),P(x,3.2),b,0.5);tx(String(x),[P(x,0)[0],P(x,0)[1]+16],m,0,&#x27;center&#x27;)}
+ for(let y=1;y&lt;=3;y++){ln(P(-2.4,y),P(3.4,y),b,0.5);tx(String(y),[P(0,y)[0]-10,P(0,y)[1]+4],m,0,&#x27;right&#x27;)}ln(P(-2.4,0),P(3.4,0),b,0.5);
+ ar(P(0,0),P(3.5,0),m,1);ar(P(0,0),P(0,3.3),m,1);tx(&#x27;世界 x&#x27;,[P(3.5,0)[0]-20,P(3.5,0)[1]-8],m);tx(&#x27;世界 y&#x27;,[P(0,3.3)[0]+8,P(0,3.3)[1]+6],m);
+ let t1=0,t2=0;if(step===1)t1=90*p;else if(step===2){t1=90;t2=-90*p}else if(step&gt;=3){t1=90;t2=-90}
+ const a1=t1*D,a2=(t1+t2)*D,B=[2*Math.cos(a1),2*Math.sin(a1)],E=[B[0]+Math.cos(a2),B[1]+Math.sin(a2)];
+ ctx.lineCap=&#x27;round&#x27;;ln(P(0,0),P(...B),&#x27;rgba(136,135,128,.4)&#x27;,13);ln(P(...B),P(...E),&#x27;rgba(136,135,128,.4)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillRect(P(0,0)[0]-16,P(0,0)[1]+2,32,7);
+ const dim=step&gt;=3?1.5:2.5;frame([0,0],a1,&#x27;A&#x27;,dim);
+ if(step&gt;=2||step===0)frame(B,a2,&#x27;B&#x27;,step===4?4:dim);
+ dot(P(0,0),pri,4);dot(P(...B),pri,4);dot(P(...E),pri,5);
+ tx(&#x27;A&#x27;,[P(0,0)[0]-14,P(0,0)[1]-8],pri,1);tx(&#x27;B&#x27;,[P(...B)[0]-16,P(...B)[1]-6],pri,1);tx(&#x27;末端&#x27;,[P(...E)[0]+8,P(...E)[1]+18],pri,1);
+ if(step===0){tx(&#x27;长 2&#x27;,[P(1,0)[0],P(1,0)[1]+34],CT,1,&#x27;center&#x27;);tx(&#x27;长 1&#x27;,[P(2.5,0)[0],P(2.5,0)[1]+34],CT,1,&#x27;center&#x27;)}
+ if(step===1&amp;&amp;p&gt;0.05){ctx.strokeStyle=CP;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(...P(0,0),sc*0.55,-a1,0);ctx.stroke();tx(&#x27;θ₁ = &#x27;+Math.round(t1)+&#x27;°&#x27;,[P(0.75,0.35)[0],P(0.75,0.35)[1]],CP,1)}
+ if(step===2&amp;&amp;p&gt;0.05){ctx.strokeStyle=CP;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(...P(...B),sc*0.45,-Math.PI/2,-a2);ctx.stroke();tx(&#x27;θ₂ = &#x27;+Math.round(t2)+&#x27;°&#x27;,[P(B[0]+0.35,B[1]+0.55)[0],P(B[0]+0.35,B[1]+0.55)[1]],CP,1)}
+ if(step===3){ar(P(0,0),P(-0.05,1.95),CT,3);tx(&#x27;沿 x_A 走 2&#x27;,[P(0.15,1)[0],P(0.15,1)[1]],CT,1);ctx.strokeStyle=CT;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(...P(...B),11,0,7);ctx.stroke()}
+ if(step===4){ar(P(...B),P(B[0]-0.75,B[1]),CY,1.5,[5,4]);tx(&#x27;y_A 方向&#x27;,[P(B[0]-0.8,B[1])[0]-4,P(B[0]-0.8,B[1])[1]-8],CY,1,&#x27;right&#x27;);tx(&#x27;B 的 x = −y_A（反过来）&#x27;,[P(B[0]+0.1,B[1]+0.55)[0],P(B[0]+0.1,B[1]+0.55)[1]],CX,1)}
+ if(step===5){ar(P(...B),P(E[0]-0.04,E[1]),CT,3);tx(&#x27;沿 B 的 x 走 1&#x27;,[P(B[0]+0.5,B[1]+0.3)[0],P(B[0]+0.5,B[1]+0.3)[1]],CT,1,&#x27;center&#x27;);ctx.strokeStyle=CT;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(...P(...E),11,0,7);ctx.stroke()}
+ if(step===2){const bx=W-150,by=12,bw=138,bh=118;ctx.strokeStyle=css(&#x27;--border-strong&#x27;);ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,bh);ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;站在 A 上看（A 摆正）&#x27;,bx+8,by+16);
+  const o=[bx+18,by+70],u=46;ctx.lineCap=&#x27;round&#x27;;ctx.strokeStyle=&#x27;rgba(136,135,128,.4)&#x27;;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(...o);ctx.lineTo(o[0]+u*2,o[1]);ctx.stroke();ctx.lineCap=&#x27;butt&#x27;;
+  const bb=[o[0]+u*2,o[1]],ang=-90*p*D;ctx.save();ctx.font=&#x27;500 11px sans-serif&#x27;;
+  const sa=(a,b2,c)=&gt;{ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b2);ctx.stroke();const an=Math.atan2(b2[1]-a[1],b2[0]-a[0]);ctx.beginPath();ctx.moveTo(...b2);ctx.lineTo(b2[0]-7*Math.cos(an-0.4),b2[1]-7*Math.sin(an-0.4));ctx.lineTo(b2[0]-7*Math.cos(an+0.4),b2[1]-7*Math.sin(an+0.4));ctx.fill()};
+  sa(o,[o[0]+28,o[1]],CX);sa(o,[o[0],o[1]-28],CY);ctx.fillStyle=CX;ctx.fillText(&#x27;x_A&#x27;,o[0]+20,o[1]+14);ctx.fillStyle=CY;ctx.fillText(&#x27;y_A&#x27;,o[0]+4,o[1]-30);
+  sa(bb,[bb[0]+30*Math.cos(ang),bb[1]-30*Math.sin(ang)],CX);ctx.fillStyle=CX;ctx.fillText(&#x27;x_B&#x27;,bb[0]+6,bb[1]+(p&gt;0.5?38:-6));ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillText(&#x27;(2, 0)&#x27;,bb[0]-22,bb[1]-8);ctx.restore()}
+ panel()}
+function m3(M,hl){return `&lt;div class=&quot;m&quot;&gt;`+M.map((r,i)=&gt;r.map((v,j)=&gt;`&lt;div class=&quot;${i&lt;2&amp;&amp;hl.includes(j)?&#x27;c&#x27;+j:&#x27;&#x27;}&quot;&gt;${v}&lt;/div&gt;`).join(&#x27;&#x27;)).join(&#x27;&#x27;)+&#x27;&lt;/div&gt;&#x27;}
+const WA=[[&#x27;0&#x27;,&#x27;−1&#x27;,&#x27;0&#x27;],[&#x27;1&#x27;,&#x27;0&#x27;,&#x27;0&#x27;],[&#x27;0&#x27;,&#x27;0&#x27;,&#x27;1&#x27;]],AB=[[&#x27;0&#x27;,&#x27;1&#x27;,&#x27;2&#x27;],[&#x27;−1&#x27;,&#x27;0&#x27;,&#x27;0&#x27;],[&#x27;0&#x27;,&#x27;0&#x27;,&#x27;1&#x27;]];
+function panel(){let h=&#x27;&#x27;;
+ if(step===0)h=`&lt;div class=&quot;nt&quot;&gt;两节手臂：第一节从底座 A 到关节 B，长 2；第二节从 B 到末端，长 1。&lt;br&gt;两个关节都还没转的时候，整条手臂平躺在世界 x 轴上：A 在 (0, 0)，B 在 (2, 0)，末端在 (3, 0)。&lt;br&gt;A 和 B 身上各带一个小坐标系（橙色 x、绿色 y）。&lt;b&gt;规定：每一节手臂都沿着自己坐标系的 x 轴伸出去。&lt;/b&gt;&lt;br&gt;题目要做的事：关节 1 转 90°、关节 2 转 −90° 之后，末端跑到了哪里？&lt;/div&gt;`;
+ else if(step===1)h=`&lt;div style=&quot;display:flex;gap:18px;flex-wrap:wrap;align-items:center&quot;&gt;&lt;div&gt;T_WA = ${m3(WA,[0,1,2])}&lt;/div&gt;&lt;div class=&quot;nt&quot; style=&quot;flex:1;min-width:260px&quot;&gt;关节 1 逆时针转 90°，&lt;b&gt;整条手臂&lt;/b&gt;（两节一起）绕 A 转，现在竖直朝上。&lt;br&gt;按列读 T_WA（A 在世界里的样子）：&lt;br&gt;&lt;span style=&quot;color:${CX}&quot;&gt;■ 第 1 列 (0, 1)&lt;/span&gt;：x_A 现在朝&lt;b&gt;上&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:${CY}&quot;&gt;■ 第 2 列 (−1, 0)&lt;/span&gt;：y_A 现在朝&lt;b&gt;左&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:${CT}&quot;&gt;■ 第 3 列 (0, 0)&lt;/span&gt;：A 的位置还在原点&lt;/div&gt;&lt;/div&gt;`;
+ else if(step===2)h=`&lt;div style=&quot;display:flex;gap:18px;flex-wrap:wrap;align-items:center&quot;&gt;&lt;div&gt;T_AB = ${m3(AB,[0,1,2])}&lt;/div&gt;&lt;div class=&quot;nt&quot; style=&quot;flex:1;min-width:260px&quot;&gt;关节 2 转 −90°，也就是&lt;b&gt;顺时针&lt;/b&gt;转 90°，只有第二节手臂跟着转，向右拐。&lt;br&gt;T_AB 是&lt;b&gt;站在 A 上看&lt;/b&gt;（右上角小图）：&lt;br&gt;&lt;span style=&quot;color:${CX}&quot;&gt;■ 第 1 列 (0, −1)&lt;/span&gt;：x_B 在 A 看来朝 −y_A（小图里朝下）&lt;br&gt;&lt;span style=&quot;color:${CY}&quot;&gt;■ 第 2 列 (1, 0)&lt;/span&gt;：y_B 在 A 看来朝 +x_A&lt;br&gt;&lt;span style=&quot;color:${CT}&quot;&gt;■ 第 3 列 (2, 0)&lt;/span&gt;：B 在 A 的 x 轴上 2 远（第一节手臂长 2）&lt;/div&gt;&lt;/div&gt;`;
+ else if(step===3)h=`&lt;div class=&quot;nt&quot;&gt;B 在 A 里是 (2, 0)，意思是“沿 x_A 走 2，沿 y_A 走 0”。它是一个&lt;b&gt;点&lt;/b&gt;，补 1 写成 (2, 0, 1)。用 T_WA 按行乘：&lt;/div&gt;
+ &lt;div class=&quot;cal&quot; style=&quot;margin-top:6px&quot;&gt;第 1 行：0×2 + (−1)×0 + 0×1 = 0&lt;br&gt;第 2 行：1×2 +   0×0  + 0×1 = 2&lt;br&gt;→ B = &lt;b&gt;(0, 2)&lt;/b&gt;&lt;/div&gt;
+ &lt;div class=&quot;nt&quot; style=&quot;margin-top:6px&quot;&gt;意思：x_A 在世界里朝上，沿它走 2，就到了 (0, 2)。图里 B 正好在这里。&lt;/div&gt;`;
+ else if(step===4)h=`&lt;div class=&quot;nt&quot;&gt;B 的 x 轴在 A 里是 (0, −1)，意思是“沿 x_A 走 0，沿 y_A 走 −1”，也就是 &lt;b&gt;y_A 的反方向&lt;/b&gt;。它是一个&lt;b&gt;方向&lt;/b&gt;，补 0 写成 (0, −1, 0)。用 T_WA 按行乘：&lt;/div&gt;
+ &lt;div class=&quot;cal&quot; style=&quot;margin-top:6px&quot;&gt;第 1 行：0×0 + (−1)×(−1) + 0×0 = 1&lt;br&gt;第 2 行：1×0 +   0×(−1)  + 0×0 = 0&lt;br&gt;→ x_B = &lt;b&gt;(1, 0)&lt;/b&gt;&lt;/div&gt;
+ &lt;div class=&quot;nt&quot; style=&quot;margin-top:6px&quot;&gt;意思：y_A 在世界里朝&lt;b&gt;左&lt;/b&gt;（图里绿色虚线），它的反方向就是朝&lt;b&gt;右&lt;/b&gt;。第 3 个数是 0，T_WA 的平移乘了 0，没有加进来：方向不需要平移。&lt;/div&gt;`;
+ else h=`&lt;div class=&quot;nt&quot;&gt;规定每一节手臂都沿自己的 x 轴伸出去，所以末端在 B 里是 (1, 0)：从 B 出发，沿 B 的 x 轴走 1。&lt;/div&gt;
+ &lt;div class=&quot;cal&quot; style=&quot;margin-top:6px&quot;&gt;末端 = B 的位置 + 1 × B 的 x 轴&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;= (0, 2) + 1 × (1, 0)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;= &lt;b&gt;(1, 2)&lt;/b&gt;&lt;/div&gt;
+ &lt;div class=&quot;nt&quot; style=&quot;margin-top:6px&quot;&gt;直观检查：手臂先往上伸 2 到 B，再往右拐伸 1，末端就在 (1, 2)。这就是正向运动学：&lt;b&gt;已知关节角，求末端位置&lt;/b&gt;。&lt;/div&gt;`;
+ $(&#x27;panel&#x27;).innerHTML=h}
+function animate(){clearInterval(anim);if(step===1||step===2){p=0;anim=setInterval(()=&gt;{p=Math.min(1,p+0.012);draw();if(p&gt;=1)clearInterval(anim)},16)}else{p=1;draw()}}
+function setStep(i){step=i;$(&#x27;title&#x27;).textContent=TT[i];$(&#x27;replay&#x27;).style.visibility=(i===1||i===2)?&#x27;visible&#x27;:&#x27;hidden&#x27;;
+ $(&#x27;pills&#x27;).innerHTML=TT.map((_,k)=&gt;`&lt;span class=&quot;pill ${k===i?&#x27;on&#x27;:&#x27;&#x27;}&quot; data-k=&quot;${k}&quot;&gt;${k+1}&lt;/span&gt;`).join(&#x27;&#x27;);
+ $(&#x27;pills&#x27;).querySelectorAll(&#x27;.pill&#x27;).forEach(q=&gt;q.onclick=()=&gt;setStep(+q.dataset.k));animate()}
+$(&#x27;prev&#x27;).onclick=()=&gt;setStep((step+5)%6);$(&#x27;next&#x27;).onclick=()=&gt;setStep((step+1)%6);$(&#x27;replay&#x27;).onclick=animate;
+window.addEventListener(&#x27;resize&#x27;,draw);setStep(0);
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=10;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<pre>整个计算顺序：
+1. 读 T_WA      A 在世界里：x_A 朝哪、y_A 朝哪、A 在哪
+2. 读 T_AB      站在 A 上看 B：B 在哪、x_B 朝哪
+3. 算 B 的位置（世界）   T_WA × (2, 0, 1)   = (0, 2)    ← 点，补 1
+4. 读 x_B（在 A 里）      T_AB 的最左一列    = (0, −1)   ← 直接读，不用算
+5. 算 x_B（世界）        T_WA × (0, −1, 0)  = (1, 0)    ← 方向，补 0
+6. 算末端（世界）        B 的位置 + 1 × x_B  = (1, 2)    ← 自己相加</pre>
+<div class="key"><b>为什么第 5 步要换算 x_B？</b>因为第 6 步要做加法，B 的位置是世界坐标，x_B 也必须是世界坐标才能加。直接拿 A 里的方向去加会算错。<br><b>手臂长度藏在哪：</b>x_B 是方向，长度永远是 1。第一节手臂长写在 T_AB 最右一列 (2, 0)；第二节手臂长在最后一步"B + 长度 × x_B"里乘上去。</div>
+
+<h3>加练一 · 底座不在原点，第二节长 2</h3>
+<div class="card"><iframe id="f11" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:46px;height:32px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mi{display:inline-grid;grid-template-columns:repeat(3,46px);gap:4px;vertical-align:middle}
+.mi .fx{height:32px;line-height:32px;text-align:center;font-family:var(--font-mono);font-size:14px;color:var(--text-muted);background:var(--surface-1);border-radius:var(--radius)}
+.mg{display:inline-grid;grid-template-columns:repeat(3,34px);gap:2px;font-family:var(--font-mono);font-size:13px;vertical-align:middle}
+.mg div{text-align:center;padding:3px 0;border-radius:4px;background:var(--surface-1)}
+.mg .t{background:rgba(239,159,39,.24)}.mg .r{background:rgba(127,119,221,.18)}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.7;white-space:pre}
+.lb{font-size:13px;color:var(--text-secondary);margin:12px 0 5px}
+.row{display:flex;align-items:center;gap:4px;font-size:16px}
+.sec{font-size:14px;font-weight:500;margin:14px 0 6px}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:6px&quot;&gt;底座 A 在世界的 &lt;b&gt;(1, 0)&lt;/b&gt;。第一节手臂长 2，第二节手臂长 &lt;b&gt;2&lt;/b&gt;。关节 1 转 θ₁ = &lt;b&gt;90°&lt;/b&gt;，关节 2 转 θ₂ = &lt;b&gt;90°&lt;/b&gt;。每一节手臂都沿自己坐标系的 x 轴伸出去。&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:6px&quot;&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary)&quot;&gt;T_WA（θ₁ = 90°，A 在 (1, 0)）&lt;/div&gt;&lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary)&quot;&gt;T_AB（θ₂ = 90°，距离 2）&lt;/div&gt;&lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;&lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后显示机械臂&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot; style=&quot;margin-top:0&quot;&gt;① B 在世界里的位置 = T_WA × (2, 0, 1)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;② x_B 在 A 里朝哪（从 T_AB 读出来）&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v3&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;③ x_B 在世界里朝哪 = T_WA × (② 的结果, 0)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v4&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v5&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;④ 末端在世界里 = B 的位置 + 2 × x_B&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v6&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v7&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const CFG={&quot;A0&quot;: [1, 0], &quot;L1&quot;: 2, &quot;L2&quot;: 2, &quot;t1&quot;: 90, &quot;t2&quot;: 90, &quot;xr&quot;: [-2, 3], &quot;yr&quot;: [0, 3], &quot;labB&quot;: &quot;B (1, 2)&quot;, &quot;labE&quot;: &quot;末端 (−1, 2)&quot;, &quot;lock&quot;: &quot;先转关节 1（90°），再转关节 2（90°）&quot;, &quot;KEY&quot;: {&quot;v0&quot;: 1, &quot;v1&quot;: 2, &quot;v2&quot;: 0, &quot;v3&quot;: 1, &quot;v4&quot;: -1, &quot;v5&quot;: 0, &quot;v6&quot;: -1, &quot;v7&quot;: 2}, &quot;hints&quot;: [&quot;① (2, 0, 1) 用 T_WA 按行乘。这次 T_WA 最右一列是 (1, 0)，不是 0 了。&quot;, &quot;② 直接读 T_AB 最左一列（只看前两个数）。&quot;, &quot;③ 把 ② 补 0，用 T_WA 按行乘。&quot;, &quot;④ 第二节手臂长 2，所以是\&quot;走 2 步\&quot;：B 的位置 + 2 × (③ 的结果)。&quot;], &quot;sol&quot;: &quot;T_WA                     T_AB\n⎡ 0  −1  1 ⎤             ⎡ 0  −1  2 ⎤\n⎢ 1   0  0 ⎥             ⎢ 1   0  0 ⎥\n⎣ 0   0  1 ⎦             ⎣ 0   0  1 ⎦\n\n① T_WA × (2, 0, 1)：\n   第 1 行：0×2 + (−1)×0 + 1×1 = 1\n   第 2 行：1×2 +   0×0  + 0×1 = 2       → B = (1, 2)\n\n② T_AB 最左一列：(0, 1)                 → x_B 在 A 里朝 y_A 方向\n\n③ T_WA × (0, 1, 0)：\n   第 1 行：0×0 + (−1)×1 + 1×0 = −1\n   第 2 行：1×0 +   0×1  + 0×0 =  0      → x_B 在世界里 = (−1, 0)，朝左\n\n④ 末端 = (1, 2) + 2 × (−1, 0) = (1, 2) + (−2, 0) = (−1, 2)&quot;, &quot;note&quot;: &quot;直观检查：从 (1, 0) 往上伸 2 到 B (1, 2)，再向左拐（逆时针 90°）伸 2，末端在 (−1, 2)。&lt;br&gt;① 里底座的平移 (1, 0) 乘了 1，加进来了；③ 里乘了 0，没加进来：点补 1、方向补 0。&lt;br&gt;x_B 的长度还是 1，第二节手臂的长度 2 是在 ④ 里乘上去的。&quot;};
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;let done=false,hints=0,k=0,anim=null;const A0=CFG.A0;
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;}
+function frame(o,th,nm){const c=Math.cos(th),s=Math.sin(th);ar(P(...o),P(o[0]+0.6*c,o[1]+0.6*s),CX,2.5);ar(P(...o),P(o[0]-0.6*s,o[1]+0.6*c),CY,2.5);tx(nm,[P(...o)[0]+8,P(...o)[1]+16],css(&#x27;--text-primary&#x27;),1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const [x0,x1]=CFG.xr,[y0,y1]=CFG.yr;sc=Math.min(W/(x1-x0+1.4),H/(y1-y0+1.1));ox=W/2-((x0+x1)/2)*sc;oy=H/2+((y0+y1)/2)*sc;
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=x0;x&lt;=x1;x++){ln(P(x,y0-0.3),P(x,y1+0.3),b,0.5);tx(String(x),[P(x,y0)[0],P(x,y0)[1]+16],m,0,&#x27;center&#x27;)}
+ for(let y=y0;y&lt;=y1;y++){ln(P(x0-0.4,y),P(x1+0.4,y),b,0.5);tx(String(y),[P(x0-0.4,y)[0]-4,P(x0-0.4,y)[1]+4],m,0,&#x27;right&#x27;)}
+ if(x0&lt;=0&amp;&amp;x1&gt;=0&amp;&amp;y0&lt;=0&amp;&amp;y1&gt;=0){ar(P(0,0),P(0.6,0),m,1.2);ar(P(0,0),P(0,0.6),m,1.2)}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillRect(P(...A0)[0]-7,P(...A0)[1]-7,14,14);
+ if(!done){frame(A0,0,&#x27;A&#x27;);tx(&#x27;（转动前）&#x27;,[P(...A0)[0]+18,P(...A0)[1]-26],m);return}
+ const f=Math.min(1,k),t1=CFG.t1*D*Math.min(1,f*2),t2=CFG.t2*D*Math.max(0,f*2-1),B=[A0[0]+CFG.L1*Math.cos(t1),A0[1]+CFG.L1*Math.sin(t1)],th=t1+t2,E=[B[0]+CFG.L2*Math.cos(th),B[1]+CFG.L2*Math.sin(th)];
+ ctx.lineCap=&#x27;round&#x27;;ln(P(...A0),P(...B),&#x27;rgba(136,135,128,.45)&#x27;,12);ln(P(...B),P(...E),&#x27;rgba(136,135,128,.45)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ frame(A0,t1,&#x27;A&#x27;);frame(B,th,&#x27;B&#x27;);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(...E),5,0,7);ctx.fill();
+ if(f&gt;=1){tx(CFG.labB,[P(...B)[0]-10,P(...B)[1]-12],pri,1,&#x27;right&#x27;);tx(CFG.labE,[P(...E)[0]+10,P(...E)[1]-8],pri,1)}}
+const IDS=Object.keys(CFG.KEY);IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;CFG.hints.length){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+CFG.hints[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals={};IDS.forEach(id=&gt;vals[id]=$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(IDS.some(id=&gt;vals[id]===&#x27;&#x27;||isNaN(+vals[id]))){$(&#x27;err&#x27;).textContent=&#x27;所有格子都要填数字&#x27;;return}
+ done=true;const wr={};
+ IDS.forEach(id=&gt;{const ok=Math.abs(+vals[id]-CFG.KEY[id])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok){const g=id[0]===&#x27;a&#x27;?&#x27;T_WA&#x27;:id[0]===&#x27;b&#x27;?&#x27;T_AB&#x27;:&#x27;①②③④&#x27;[Math.floor(+id[1]/2)];wr[g]=1}});
+ $(&#x27;lock&#x27;).textContent=CFG.lock;k=0;anim=setInterval(()=&gt;{k+=0.01;draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=Object.keys(wr);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad.length?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad.length?`这几处有错：${bad.join(&#x27;、&#x27;)}。看看完整解析：`:&#x27;全对！&#x27;}&lt;/div&gt;&lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;${CFG.sol}&lt;/div&gt;&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${CFG.note}&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=11;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>加练二 · 关节 1 转 180°</h3>
+<div class="card"><iframe id="f12" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:46px;height:32px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mi{display:inline-grid;grid-template-columns:repeat(3,46px);gap:4px;vertical-align:middle}
+.mi .fx{height:32px;line-height:32px;text-align:center;font-family:var(--font-mono);font-size:14px;color:var(--text-muted);background:var(--surface-1);border-radius:var(--radius)}
+.mg{display:inline-grid;grid-template-columns:repeat(3,34px);gap:2px;font-family:var(--font-mono);font-size:13px;vertical-align:middle}
+.mg div{text-align:center;padding:3px 0;border-radius:4px;background:var(--surface-1)}
+.mg .t{background:rgba(239,159,39,.24)}.mg .r{background:rgba(127,119,221,.18)}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.7;white-space:pre}
+.lb{font-size:13px;color:var(--text-secondary);margin:12px 0 5px}
+.row{display:flex;align-items:center;gap:4px;font-size:16px}
+.sec{font-size:14px;font-weight:500;margin:14px 0 6px}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:6px&quot;&gt;底座 A 在世界的 &lt;b&gt;(0, 1)&lt;/b&gt;。第一节手臂长 2，第二节手臂长 1。关节 1 转 θ₁ = &lt;b&gt;180°&lt;/b&gt;，关节 2 转 θ₂ = &lt;b&gt;90°&lt;/b&gt;。每一节手臂都沿自己坐标系的 x 轴伸出去。&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:6px&quot;&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary)&quot;&gt;T_WA（θ₁ = 180°，A 在 (0, 1)）&lt;/div&gt;&lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;1&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary)&quot;&gt;T_AB（θ₂ = 90°，距离 2）&lt;/div&gt;&lt;div class=&quot;mg&quot;&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;−1&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;r&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;t&quot;&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;&lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后显示机械臂&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot; style=&quot;margin-top:0&quot;&gt;① B 在世界里的位置 = T_WA × (2, 0, 1)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;② x_B 在 A 里朝哪（从 T_AB 读出来）&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v3&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;③ x_B 在世界里朝哪 = T_WA × (② 的结果, 0)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v4&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v5&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;④ 末端在世界里 = B 的位置 + 1 × x_B&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v6&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v7&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const CFG={&quot;A0&quot;: [0, 1], &quot;L1&quot;: 2, &quot;L2&quot;: 1, &quot;t1&quot;: 180, &quot;t2&quot;: 90, &quot;xr&quot;: [-3, 2], &quot;yr&quot;: [0, 2], &quot;labB&quot;: &quot;B (−2, 1)&quot;, &quot;labE&quot;: &quot;末端 (−2, 0)&quot;, &quot;lock&quot;: &quot;先转关节 1（180°），再转关节 2（90°）&quot;, &quot;KEY&quot;: {&quot;v0&quot;: -2, &quot;v1&quot;: 1, &quot;v2&quot;: 0, &quot;v3&quot;: 1, &quot;v4&quot;: 0, &quot;v5&quot;: -1, &quot;v6&quot;: -2, &quot;v7&quot;: 0}, &quot;hints&quot;: [&quot;① (2, 0, 1) 用 T_WA 按行乘。T_WA 第 1 行是 (−1, 0, 0)，第 2 行是 (0, −1, 1)。&quot;, &quot;② 直接读 T_AB 最左一列（只看前两个数）。&quot;, &quot;③ 把 ② 补 0，用 T_WA 按行乘。A 转了 180°，y_A 现在朝下。&quot;, &quot;④ 第二节手臂长 1：B 的位置 + 1 × (③ 的结果)。&quot;], &quot;sol&quot;: &quot;T_WA                     T_AB\n⎡ −1   0  0 ⎤            ⎡ 0  −1  2 ⎤\n⎢  0  −1  1 ⎥            ⎢ 1   0  0 ⎥\n⎣  0   0  1 ⎦            ⎣ 0   0  1 ⎦\nx_A = (−1, 0) 朝左，y_A = (0, −1) 朝下，A 在 (0, 1)\n\n① T_WA × (2, 0, 1)：\n   第 1 行：(−1)×2 + 0×0    + 0×1 = −2\n   第 2 行：  0×2  + (−1)×0 + 1×1 =  1   → B = (−2, 1)\n\n② T_AB 最左一列：(0, 1)                 → 朝 y_A 方向\n\n③ T_WA × (0, 1, 0)：\n   第 1 行：(−1)×0 + 0×1    + 0×0 =  0\n   第 2 行：  0×0  + (−1)×1 + 1×0 = −1   → x_B 在世界里 = (0, −1)，朝下\n\n④ 末端 = (−2, 1) + 1 × (0, −1) = (−2, 0)&quot;, &quot;note&quot;: &quot;直观检查：从 (0, 1) 往左伸 2 到 B (−2, 1)，再逆时针拐 90°（从朝左变成朝下），伸 1，末端在 (−2, 0)。&lt;br&gt;如果第 ③ 步直接拿 (0, 1) 去加，会得到 (−2, 2)，手臂就往上拐了，方向反了。&quot;};
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;let done=false,hints=0,k=0,anim=null;const A0=CFG.A0;
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;}
+function frame(o,th,nm){const c=Math.cos(th),s=Math.sin(th);ar(P(...o),P(o[0]+0.6*c,o[1]+0.6*s),CX,2.5);ar(P(...o),P(o[0]-0.6*s,o[1]+0.6*c),CY,2.5);tx(nm,[P(...o)[0]+8,P(...o)[1]+16],css(&#x27;--text-primary&#x27;),1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const [x0,x1]=CFG.xr,[y0,y1]=CFG.yr;sc=Math.min(W/(x1-x0+1.4),H/(y1-y0+1.1));ox=W/2-((x0+x1)/2)*sc;oy=H/2+((y0+y1)/2)*sc;
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=x0;x&lt;=x1;x++){ln(P(x,y0-0.3),P(x,y1+0.3),b,0.5);tx(String(x),[P(x,y0)[0],P(x,y0)[1]+16],m,0,&#x27;center&#x27;)}
+ for(let y=y0;y&lt;=y1;y++){ln(P(x0-0.4,y),P(x1+0.4,y),b,0.5);tx(String(y),[P(x0-0.4,y)[0]-4,P(x0-0.4,y)[1]+4],m,0,&#x27;right&#x27;)}
+ if(x0&lt;=0&amp;&amp;x1&gt;=0&amp;&amp;y0&lt;=0&amp;&amp;y1&gt;=0){ar(P(0,0),P(0.6,0),m,1.2);ar(P(0,0),P(0,0.6),m,1.2)}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillRect(P(...A0)[0]-7,P(...A0)[1]-7,14,14);
+ if(!done){frame(A0,0,&#x27;A&#x27;);tx(&#x27;（转动前）&#x27;,[P(...A0)[0]+18,P(...A0)[1]-26],m);return}
+ const f=Math.min(1,k),t1=CFG.t1*D*Math.min(1,f*2),t2=CFG.t2*D*Math.max(0,f*2-1),B=[A0[0]+CFG.L1*Math.cos(t1),A0[1]+CFG.L1*Math.sin(t1)],th=t1+t2,E=[B[0]+CFG.L2*Math.cos(th),B[1]+CFG.L2*Math.sin(th)];
+ ctx.lineCap=&#x27;round&#x27;;ln(P(...A0),P(...B),&#x27;rgba(136,135,128,.45)&#x27;,12);ln(P(...B),P(...E),&#x27;rgba(136,135,128,.45)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ frame(A0,t1,&#x27;A&#x27;);frame(B,th,&#x27;B&#x27;);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(...E),5,0,7);ctx.fill();
+ if(f&gt;=1){tx(CFG.labB,[P(...B)[0]-10,P(...B)[1]-12],pri,1,&#x27;right&#x27;);tx(CFG.labE,[P(...E)[0]+10,P(...E)[1]-8],pri,1)}}
+const IDS=Object.keys(CFG.KEY);IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;CFG.hints.length){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+CFG.hints[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals={};IDS.forEach(id=&gt;vals[id]=$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(IDS.some(id=&gt;vals[id]===&#x27;&#x27;||isNaN(+vals[id]))){$(&#x27;err&#x27;).textContent=&#x27;所有格子都要填数字&#x27;;return}
+ done=true;const wr={};
+ IDS.forEach(id=&gt;{const ok=Math.abs(+vals[id]-CFG.KEY[id])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok){const g=id[0]===&#x27;a&#x27;?&#x27;T_WA&#x27;:id[0]===&#x27;b&#x27;?&#x27;T_AB&#x27;:&#x27;①②③④&#x27;[Math.floor(+id[1]/2)];wr[g]=1}});
+ $(&#x27;lock&#x27;).textContent=CFG.lock;k=0;anim=setInterval(()=&gt;{k+=0.01;draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=Object.keys(wr);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad.length?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad.length?`这几处有错：${bad.join(&#x27;、&#x27;)}。看看完整解析：`:&#x27;全对！&#x27;}&lt;/div&gt;&lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;${CFG.sol}&lt;/div&gt;&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${CFG.note}&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=12;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>完整练习一 · 自己写矩阵</h3>
+<div class="card"><iframe id="f13" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:46px;height:32px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mi{display:inline-grid;grid-template-columns:repeat(3,46px);gap:4px;vertical-align:middle}
+.mi .fx{height:32px;line-height:32px;text-align:center;font-family:var(--font-mono);font-size:14px;color:var(--text-muted);background:var(--surface-1);border-radius:var(--radius)}
+.mg{display:inline-grid;grid-template-columns:repeat(3,34px);gap:2px;font-family:var(--font-mono);font-size:13px;vertical-align:middle}
+.mg div{text-align:center;padding:3px 0;border-radius:4px;background:var(--surface-1)}
+.mg .t{background:rgba(239,159,39,.24)}.mg .r{background:rgba(127,119,221,.18)}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.7;white-space:pre}
+.lb{font-size:13px;color:var(--text-secondary);margin:12px 0 5px}
+.row{display:flex;align-items:center;gap:4px;font-size:16px}
+.sec{font-size:14px;font-weight:500;margin:14px 0 6px}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:6px&quot;&gt;底座 A 在世界的 &lt;b&gt;(1, 2)&lt;/b&gt;。第一节手臂长 &lt;b&gt;2&lt;/b&gt;，第二节长 &lt;b&gt;1&lt;/b&gt;。关节 1 转 θ₁ = &lt;b&gt;−90°&lt;/b&gt;，关节 2 转 θ₂ = &lt;b&gt;90°&lt;/b&gt;。每一节手臂都沿自己坐标系的 x 轴伸出去。末端在世界里的哪里？&lt;/div&gt;
+&lt;div class=&quot;sec&quot;&gt;第一部分：自己写出两个矩阵&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:28px;flex-wrap:wrap&quot;&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary);margin-bottom:4px&quot;&gt;T_WA（A 在世界里）&lt;/div&gt;&lt;div class=&quot;mi&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a00&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a01&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a02&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a10&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a11&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a12&quot;&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary);margin-bottom:4px&quot;&gt;T_AB（B 在 A 里）&lt;/div&gt;&lt;div class=&quot;mi&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b00&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b01&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b02&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b10&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b11&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b12&quot;&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&quot;sec&quot;&gt;第二部分：算出末端&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;&lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后显示机械臂&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot; style=&quot;margin-top:0&quot;&gt;① B 在世界里的位置 = T_WA × (?, ?, 1)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;② x_B 在 A 里朝哪（从 T_AB 读）&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v3&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;③ x_B 在世界里朝哪 = T_WA × (②, 0)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v4&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v5&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;④ 末端 = B 的位置 + 1 × x_B&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v6&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v7&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const CFG={&quot;A0&quot;: [1, 2], &quot;L1&quot;: 2, &quot;L2&quot;: 1, &quot;t1&quot;: -90, &quot;t2&quot;: 90, &quot;xr&quot;: [-1, 3], &quot;yr&quot;: [0, 3], &quot;labB&quot;: &quot;B (1, 0)&quot;, &quot;labE&quot;: &quot;末端 (2, 0)&quot;, &quot;lock&quot;: &quot;先转关节 1（−90°，顺时针），再转关节 2（90°，逆时针）&quot;, &quot;KEY&quot;: {&quot;a00&quot;: 0, &quot;a01&quot;: 1, &quot;a02&quot;: 1, &quot;a10&quot;: -1, &quot;a11&quot;: 0, &quot;a12&quot;: 2, &quot;b00&quot;: 0, &quot;b01&quot;: -1, &quot;b02&quot;: 2, &quot;b10&quot;: 1, &quot;b11&quot;: 0, &quot;b12&quot;: 0, &quot;v0&quot;: 1, &quot;v1&quot;: 0, &quot;v2&quot;: 0, &quot;v3&quot;: 1, &quot;v4&quot;: 1, &quot;v5&quot;: 0, &quot;v6&quot;: 2, &quot;v7&quot;: 0}, &quot;hints&quot;: [&quot;T_WA：θ₁ = −90°，cos(−90°) = 0，sin(−90°) = −1。旋转部分是 [cos −sin; sin cos]，最右一列是 A 的位置 (1, 2)。&quot;, &quot;T_AB：θ₂ = 90°，cos 90° = 0，sin 90° = 1。最右一列是 B 在 A 里的位置 (2, 0)。&quot;, &quot;① B 在 A 里就是 T_AB 最右一列，补 1 → (2, 0, 1)。用 T_WA 按行乘它。&quot;, &quot;② 读 T_AB 最左一列。③ 把 ② 补 0，用 T_WA 按行乘。&quot;, &quot;④ 把 ① 和 ③ 对应相加（第二节手臂长 1）。&quot;], &quot;sol&quot;: &quot;T_WA：cos(−90°) = 0，sin(−90°) = −1\n⎡  0   1   1 ⎤   x_A = (0, −1) 朝下，y_A = (1, 0) 朝右，A 在 (1, 2)\n⎢ −1   0   2 ⎥\n⎣  0   0   1 ⎦\n\nT_AB：cos 90° = 0，sin 90° = 1，B 在 A 里 (2, 0)\n⎡ 0  −1   2 ⎤\n⎢ 1   0   0 ⎥\n⎣ 0   0   1 ⎦\n\n① T_WA × (2, 0, 1)：\n   第 1 行：  0×2  + 1×0 + 1×1 = 1\n   第 2 行：(−1)×2 + 0×0 + 2×1 = 0      → B = (1, 0)\n② T_AB 最左一列：(0, 1)                → 朝 y_A 方向\n③ T_WA × (0, 1, 0)：\n   第 1 行：  0×0  + 1×1 + 1×0 = 1\n   第 2 行：(−1)×0 + 0×1 + 2×0 = 0      → x_B = (1, 0)，朝右\n④ (1, 0) + 1 × (1, 0) = (2, 0)&quot;, &quot;note&quot;: &quot;直观检查：从 (1, 2) 往下伸 2 到 B (1, 0)，再逆时针拐 90°（从朝下变成朝右），伸 1，末端在 (2, 0)。&lt;br&gt;容易错的地方：−sin(−90°) = −(−1) = +1，所以 T_WA 第 1 行第 2 个数是 +1。&quot;};
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;let done=false,hints=0,k=0,anim=null;const A0=CFG.A0;
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;}
+function frame(o,th,nm){const c=Math.cos(th),s=Math.sin(th);ar(P(...o),P(o[0]+0.6*c,o[1]+0.6*s),CX,2.5);ar(P(...o),P(o[0]-0.6*s,o[1]+0.6*c),CY,2.5);tx(nm,[P(...o)[0]+8,P(...o)[1]+16],css(&#x27;--text-primary&#x27;),1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const [x0,x1]=CFG.xr,[y0,y1]=CFG.yr;sc=Math.min(W/(x1-x0+1.4),H/(y1-y0+1.1));ox=W/2-((x0+x1)/2)*sc;oy=H/2+((y0+y1)/2)*sc;
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=x0;x&lt;=x1;x++){ln(P(x,y0-0.3),P(x,y1+0.3),b,0.5);tx(String(x),[P(x,y0)[0],P(x,y0)[1]+16],m,0,&#x27;center&#x27;)}
+ for(let y=y0;y&lt;=y1;y++){ln(P(x0-0.4,y),P(x1+0.4,y),b,0.5);tx(String(y),[P(x0-0.4,y)[0]-4,P(x0-0.4,y)[1]+4],m,0,&#x27;right&#x27;)}
+ if(x0&lt;=0&amp;&amp;x1&gt;=0&amp;&amp;y0&lt;=0&amp;&amp;y1&gt;=0){ar(P(0,0),P(0.6,0),m,1.2);ar(P(0,0),P(0,0.6),m,1.2)}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillRect(P(...A0)[0]-7,P(...A0)[1]-7,14,14);
+ if(!done){frame(A0,0,&#x27;A&#x27;);tx(&#x27;（转动前）&#x27;,[P(...A0)[0]+18,P(...A0)[1]-26],m);return}
+ const f=Math.min(1,k),t1=CFG.t1*D*Math.min(1,f*2),t2=CFG.t2*D*Math.max(0,f*2-1),B=[A0[0]+CFG.L1*Math.cos(t1),A0[1]+CFG.L1*Math.sin(t1)],th=t1+t2,E=[B[0]+CFG.L2*Math.cos(th),B[1]+CFG.L2*Math.sin(th)];
+ ctx.lineCap=&#x27;round&#x27;;ln(P(...A0),P(...B),&#x27;rgba(136,135,128,.45)&#x27;,12);ln(P(...B),P(...E),&#x27;rgba(136,135,128,.45)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ frame(A0,t1,&#x27;A&#x27;);frame(B,th,&#x27;B&#x27;);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(...E),5,0,7);ctx.fill();
+ if(f&gt;=1){tx(CFG.labB,[P(...B)[0]-10,P(...B)[1]-12],pri,1,&#x27;right&#x27;);tx(CFG.labE,[P(...E)[0]+10,P(...E)[1]-8],pri,1)}}
+const IDS=Object.keys(CFG.KEY);IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;CFG.hints.length){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+CFG.hints[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals={};IDS.forEach(id=&gt;vals[id]=$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(IDS.some(id=&gt;vals[id]===&#x27;&#x27;||isNaN(+vals[id]))){$(&#x27;err&#x27;).textContent=&#x27;所有格子都要填数字&#x27;;return}
+ done=true;const wr={};
+ IDS.forEach(id=&gt;{const ok=Math.abs(+vals[id]-CFG.KEY[id])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok){const g=id[0]===&#x27;a&#x27;?&#x27;T_WA&#x27;:id[0]===&#x27;b&#x27;?&#x27;T_AB&#x27;:&#x27;①②③④&#x27;[Math.floor(+id[1]/2)];wr[g]=1}});
+ $(&#x27;lock&#x27;).textContent=CFG.lock;k=0;anim=setInterval(()=&gt;{k+=0.01;draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=Object.keys(wr);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad.length?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad.length?`这几处有错：${bad.join(&#x27;、&#x27;)}。看看完整解析：`:&#x27;全对！&#x27;}&lt;/div&gt;&lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;${CFG.sol}&lt;/div&gt;&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${CFG.note}&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=13;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>完整练习二 · 自己写矩阵</h3>
+<div class="card"><iframe id="f14" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:46px;height:32px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.mi{display:inline-grid;grid-template-columns:repeat(3,46px);gap:4px;vertical-align:middle}
+.mi .fx{height:32px;line-height:32px;text-align:center;font-family:var(--font-mono);font-size:14px;color:var(--text-muted);background:var(--surface-1);border-radius:var(--radius)}
+.mg{display:inline-grid;grid-template-columns:repeat(3,34px);gap:2px;font-family:var(--font-mono);font-size:13px;vertical-align:middle}
+.mg div{text-align:center;padding:3px 0;border-radius:4px;background:var(--surface-1)}
+.mg .t{background:rgba(239,159,39,.24)}.mg .r{background:rgba(127,119,221,.18)}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.7;white-space:pre}
+.lb{font-size:13px;color:var(--text-secondary);margin:12px 0 5px}
+.row{display:flex;align-items:center;gap:4px;font-size:16px}
+.sec{font-size:14px;font-weight:500;margin:14px 0 6px}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:6px&quot;&gt;底座 A 在世界的 &lt;b&gt;(2, 1)&lt;/b&gt;。第一节手臂长 &lt;b&gt;2&lt;/b&gt;，第二节长 &lt;b&gt;1&lt;/b&gt;。关节 1 转 θ₁ = &lt;b&gt;180°&lt;/b&gt;，关节 2 转 θ₂ = &lt;b&gt;−90°&lt;/b&gt;。每一节手臂都沿自己坐标系的 x 轴伸出去。末端在世界里的哪里？&lt;/div&gt;
+&lt;div class=&quot;sec&quot;&gt;第一部分：自己写出两个矩阵&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:28px;flex-wrap:wrap&quot;&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary);margin-bottom:4px&quot;&gt;T_WA（A 在世界里）&lt;/div&gt;&lt;div class=&quot;mi&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a00&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a01&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a02&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a10&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a11&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;a12&quot;&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-secondary);margin-bottom:4px&quot;&gt;T_AB（B 在 A 里）&lt;/div&gt;&lt;div class=&quot;mi&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b00&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b01&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b02&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b10&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b11&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;b12&quot;&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;fx&quot;&gt;1&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&quot;sec&quot;&gt;第二部分：算出末端&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:290px&quot;&gt;&lt;/canvas&gt;&lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;提交答案后显示机械臂&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot; style=&quot;margin-top:0&quot;&gt;① B 在世界里的位置 = T_WA × (?, ?, 1)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v0&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v1&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;② x_B 在 A 里朝哪（从 T_AB 读）&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v2&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v3&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;③ x_B 在世界里朝哪 = T_WA × (②, 0)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v4&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v5&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;④ 末端 = B 的位置 + 1 × x_B&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;v6&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;v7&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const CFG={&quot;A0&quot;: [2, 1], &quot;L1&quot;: 2, &quot;L2&quot;: 1, &quot;t1&quot;: 180, &quot;t2&quot;: -90, &quot;xr&quot;: [-1, 3], &quot;yr&quot;: [0, 3], &quot;labB&quot;: &quot;B (0, 1)&quot;, &quot;labE&quot;: &quot;末端 (0, 2)&quot;, &quot;lock&quot;: &quot;先转关节 1（180°），再转关节 2（−90°，顺时针）&quot;, &quot;KEY&quot;: {&quot;a00&quot;: -1, &quot;a01&quot;: 0, &quot;a02&quot;: 2, &quot;a10&quot;: 0, &quot;a11&quot;: -1, &quot;a12&quot;: 1, &quot;b00&quot;: 0, &quot;b01&quot;: 1, &quot;b02&quot;: 2, &quot;b10&quot;: -1, &quot;b11&quot;: 0, &quot;b12&quot;: 0, &quot;v0&quot;: 0, &quot;v1&quot;: 1, &quot;v2&quot;: 0, &quot;v3&quot;: -1, &quot;v4&quot;: 0, &quot;v5&quot;: 1, &quot;v6&quot;: 0, &quot;v7&quot;: 2}, &quot;hints&quot;: [&quot;T_WA：θ₁ = 180°，cos 180° = −1，sin 180° = 0。最右一列是 A 的位置 (2, 1)。&quot;, &quot;T_AB：θ₂ = −90°，cos(−90°) = 0，sin(−90°) = −1。小心 −sin(−90°) = +1。最右一列是 (2, 0)。&quot;, &quot;① B 在 A 里就是 T_AB 最右一列，补 1 → (2, 0, 1)。用 T_WA 按行乘它。&quot;, &quot;② 读 T_AB 最左一列。③ 把 ② 补 0，用 T_WA 按行乘。&quot;, &quot;④ 把 ① 和 ③ 对应相加（第二节手臂长 1）。&quot;], &quot;sol&quot;: &quot;T_WA：cos 180° = −1，sin 180° = 0\n⎡ −1   0   2 ⎤   x_A = (−1, 0) 朝左，y_A = (0, −1) 朝下，A 在 (2, 1)\n⎢  0  −1   1 ⎥\n⎣  0   0   1 ⎦\n\nT_AB：cos(−90°) = 0，sin(−90°) = −1，B 在 A 里 (2, 0)\n⎡  0   1   2 ⎤   右上的 1 = −sin(−90°) = −(−1)\n⎢ −1   0   0 ⎥\n⎣  0   0   1 ⎦\n\n① T_WA × (2, 0, 1)：\n   第 1 行：(−1)×2 + 0×0    + 2×1 = 0\n   第 2 行：  0×2  + (−1)×0 + 1×1 = 1   → B = (0, 1)\n② T_AB 最左一列：(0, −1)              → 朝 y_A 的反方向\n③ T_WA × (0, −1, 0)：\n   第 1 行：(−1)×0 + 0×(−1)    + 2×0 = 0\n   第 2 行：  0×0  + (−1)×(−1) + 1×0 = 1 → x_B = (0, 1)，朝上\n④ (0, 1) + 1 × (0, 1) = (0, 2)&quot;, &quot;note&quot;: &quot;直观检查：从 (2, 1) 往左伸 2 到 B (0, 1)，再顺时针拐 90°（从朝左变成朝上），伸 1，末端在 (0, 2)。&lt;br&gt;③ 的意思：x_B 朝\&quot;y_A 的反方向\&quot;，y_A 在世界里朝下，反过来就是朝上。&quot;};
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;let done=false,hints=0,k=0,anim=null;const A0=CFG.A0;
+let W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;}
+function frame(o,th,nm){const c=Math.cos(th),s=Math.sin(th);ar(P(...o),P(o[0]+0.6*c,o[1]+0.6*s),CX,2.5);ar(P(...o),P(o[0]-0.6*s,o[1]+0.6*c),CY,2.5);tx(nm,[P(...o)[0]+8,P(...o)[1]+16],css(&#x27;--text-primary&#x27;),1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const [x0,x1]=CFG.xr,[y0,y1]=CFG.yr;sc=Math.min(W/(x1-x0+1.4),H/(y1-y0+1.1));ox=W/2-((x0+x1)/2)*sc;oy=H/2+((y0+y1)/2)*sc;
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let x=x0;x&lt;=x1;x++){ln(P(x,y0-0.3),P(x,y1+0.3),b,0.5);tx(String(x),[P(x,y0)[0],P(x,y0)[1]+16],m,0,&#x27;center&#x27;)}
+ for(let y=y0;y&lt;=y1;y++){ln(P(x0-0.4,y),P(x1+0.4,y),b,0.5);tx(String(y),[P(x0-0.4,y)[0]-4,P(x0-0.4,y)[1]+4],m,0,&#x27;right&#x27;)}
+ if(x0&lt;=0&amp;&amp;x1&gt;=0&amp;&amp;y0&lt;=0&amp;&amp;y1&gt;=0){ar(P(0,0),P(0.6,0),m,1.2);ar(P(0,0),P(0,0.6),m,1.2)}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.fillRect(P(...A0)[0]-7,P(...A0)[1]-7,14,14);
+ if(!done){frame(A0,0,&#x27;A&#x27;);tx(&#x27;（转动前）&#x27;,[P(...A0)[0]+18,P(...A0)[1]-26],m);return}
+ const f=Math.min(1,k),t1=CFG.t1*D*Math.min(1,f*2),t2=CFG.t2*D*Math.max(0,f*2-1),B=[A0[0]+CFG.L1*Math.cos(t1),A0[1]+CFG.L1*Math.sin(t1)],th=t1+t2,E=[B[0]+CFG.L2*Math.cos(th),B[1]+CFG.L2*Math.sin(th)];
+ ctx.lineCap=&#x27;round&#x27;;ln(P(...A0),P(...B),&#x27;rgba(136,135,128,.45)&#x27;,12);ln(P(...B),P(...E),&#x27;rgba(136,135,128,.45)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ frame(A0,t1,&#x27;A&#x27;);frame(B,th,&#x27;B&#x27;);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(...E),5,0,7);ctx.fill();
+ if(f&gt;=1){tx(CFG.labB,[P(...B)[0]-10,P(...B)[1]-12],pri,1,&#x27;right&#x27;);tx(CFG.labE,[P(...E)[0]+10,P(...E)[1]-8],pri,1)}}
+const IDS=Object.keys(CFG.KEY);IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;CFG.hints.length){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+CFG.hints[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals={};IDS.forEach(id=&gt;vals[id]=$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(IDS.some(id=&gt;vals[id]===&#x27;&#x27;||isNaN(+vals[id]))){$(&#x27;err&#x27;).textContent=&#x27;所有格子都要填数字&#x27;;return}
+ done=true;const wr={};
+ IDS.forEach(id=&gt;{const ok=Math.abs(+vals[id]-CFG.KEY[id])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok){const g=id[0]===&#x27;a&#x27;?&#x27;T_WA&#x27;:id[0]===&#x27;b&#x27;?&#x27;T_AB&#x27;:&#x27;①②③④&#x27;[Math.floor(+id[1]/2)];wr[g]=1}});
+ $(&#x27;lock&#x27;).textContent=CFG.lock;k=0;anim=setInterval(()=&gt;{k+=0.01;draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=Object.keys(wr);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad.length?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad.length?`这几处有错：${bad.join(&#x27;、&#x27;)}。看看完整解析：`:&#x27;全对！&#x27;}&lt;/div&gt;&lt;div class=&quot;mono&quot; style=&quot;margin:6px 0&quot;&gt;${CFG.sol}&lt;/div&gt;&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${CFG.note}&lt;/div&gt;`};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=14;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+</main><script>
+window.addEventListener('message',function(e){var d=e.data;if(d&&d.fid!==undefined){var f=document.getElementById('f'+d.fid);if(f)f.style.height=(d.h+6)+'px'}});
+</script></body></html>

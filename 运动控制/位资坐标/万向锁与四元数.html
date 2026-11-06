@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>欧拉角万向锁 vs 四元数（3D 动画）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--surface-1:#f5f4ef;--surface-2:#fff;--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-warning:#854F0B;--text-danger:#A32D2D;--text-success:#3B6D11;--text-accent:#185FA5;--bg-danger:#FCEBEB;--bg-success:#EAF3DE;--bg-accent:#E6F1FB;--border-strong:rgba(0,0,0,.25);--border-accent:#85B7EB;--font-mono:ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--surface-1:#262624;--surface-2:#30302e;--text-primary:#f1efe8;--text-secondary:#b4b2a9;--text-warning:#FAC775;--text-danger:#F7C1C1;--text-success:#C0DD97;--text-accent:#B5D4F4;--bg-danger:#501313;--bg-success:#173404;--bg-accent:#0C447C;--border-strong:rgba(255,255,255,.25);--border-accent:#378ADD}body{background:#1f1e1d}}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text-primary);background:#faf9f5}
+main{max-width:760px;margin:0 auto;padding:24px 16px 40px}
+h1{font-size:22px;font-weight:500;margin:0 0 16px}
+button{font:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}button:active{transform:scale(.98)}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.seg{display:flex;gap:8px;margin:0 0 10px}
+.seg button.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:14px}
+.row label{min-width:150px;color:var(--text-secondary)}
+.row .v{min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.hb{user-select:none;touch-action:none;-webkit-user-select:none}
+.qgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0}
+.qcell{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-secondary);text-align:center}
+.qcell div{display:flex;gap:6px}.qcell button{flex:1}
+</style>
+</head>
+<body>
+<main>
+<h1>欧拉角万向锁 vs 四元数</h1>
+<h2 class="sr-only">三维万向节动画：演示欧拉角在俯仰 90 度时外环与内环重合导致万向锁，以及四元数绕机身自身轴旋转不会锁死。</h2>
+<div class="seg">
+  <button id="mE" class="on" onclick="setMode('e')">欧拉角（三个环）</button>
+  <button id="mQ" onclick="setMode('q')">四元数</button>
+</div>
+<div id="wrap" style="width:100%;height:420px;cursor:grab;position:relative"></div>
+<div style="font-size:13px;color:var(--text-secondary);margin:6px 0 10px" id="legend"></div>
+<div id="st" style="padding:10px 14px;border-radius:8px;font-size:14px;line-height:1.6;background:var(--surface-1);margin-bottom:12px"></div>
+
+<div id="pE">
+  <div class="row"><label><span class="dot" style="background:#378ADD"></span>偏航 yaw（外环）</label><input type="range" id="sy" min="-180" max="180" step="1" value="0" style="flex:1"><span class="v" id="vy">0°</span></div>
+  <div class="row"><label><span class="dot" style="background:#639922"></span>俯仰 pitch（中环）</label><input type="range" id="sp" min="-90" max="90" step="1" value="0" style="flex:1"><span class="v" id="vp">0°</span></div>
+  <div class="row"><label><span class="dot" style="background:#E24B4A"></span>翻滚 roll（内环）</label><input type="range" id="sr" min="-180" max="180" step="1" value="0" style="flex:1"><span class="v" id="vr">0°</span></div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button onclick="demo()"><i class="ti ti-player-play"></i> 自动演示万向锁</button>
+    <button onclick="resetE()"><i class="ti ti-refresh"></i> 复位</button>
+  </div>
+</div>
+
+<div id="pQ" style="display:none">
+  <div style="font-size:13px;color:var(--text-secondary)">按住按钮不放，飞机会绕它自己身上的轴持续转动</div>
+  <div class="qgrid">
+    <div class="qcell">绕机翼轴（抬头/低头）<div><button class="hb" data-ax="x" data-s="-1">抬头</button><button class="hb" data-ax="x" data-s="1">低头</button></div></div>
+    <div class="qcell">绕竖直尾翼轴（机头左右摆）<div><button class="hb" data-ax="y" data-s="1">左摆</button><button class="hb" data-ax="y" data-s="-1">右摆</button></div></div>
+    <div class="qcell">绕机身轴（左右歪）<div><button class="hb" data-ax="z" data-s="-1">左歪</button><button class="hb" data-ax="z" data-s="1">右歪</button></div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin:6px 0 10px">
+    <button onclick="slerpTo(-90)"><i class="ti ti-arrow-up"></i> 平滑转到机头朝天</button>
+    <button onclick="slerpTo(0)"><i class="ti ti-refresh"></i> 复位</button>
+  </div>
+  <div id="qr" style="font-family:var(--font-mono);font-size:13px;padding:10px 14px;background:var(--surface-1);border-radius:8px;line-height:1.7"></div>
+</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const wrap=$('wrap'),H=420,D=Math.PI/180;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(window.devicePixelRatio||1);renderer.setSize(wrap.clientWidth,H);wrap.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(38,wrap.clientWidth/H,.1,100);
+scene.add(new THREE.AmbientLight(0xffffff,.65));
+const dl=new THREE.DirectionalLight(0xffffff,.7);dl.position.set(5,8,6);scene.add(dl);
+const grid=new THREE.GridHelper(7,14,0x888780,0x888780);grid.position.y=-2.7;grid.material.transparent=true;grid.material.opacity=.25;scene.add(grid);
+const BLUE=0x378ADD,GREEN=0x639922,RED=0xE24B4A;
+const X=new THREE.Vector3(1,0,0),Y=new THREE.Vector3(0,1,0),Z=new THREE.Vector3(0,0,1);
+function ring(r,c){return new THREE.Mesh(new THREE.TorusGeometry(r,.05,12,120),new THREE.MeshLambertMaterial({color:c}))}
+function line(d,l,c){const g=new THREE.BufferGeometry().setFromPoints([d.clone().multiplyScalar(-l),d.clone().multiplyScalar(l)]);return new THREE.Line(g,new THREE.LineBasicMaterial({color:c}))}
+function makePlane(){const g=new THREE.Group();
+ const body=new THREE.MeshLambertMaterial({color:0xD3D1C7}),dark=new THREE.MeshLambertMaterial({color:0x888780}),nose=new THREE.MeshLambertMaterial({color:0xEF9F27});
+ const f=new THREE.Mesh(new THREE.CylinderGeometry(.16,.11,1.8,16),body);f.rotation.x=Math.PI/2;g.add(f);
+ const n=new THREE.Mesh(new THREE.ConeGeometry(.16,.45,16),nose);n.rotation.x=Math.PI/2;n.position.z=1.12;g.add(n);
+ const w=new THREE.Mesh(new THREE.BoxGeometry(2.2,.05,.45),dark);w.position.z=.1;g.add(w);
+ const t=new THREE.Mesh(new THREE.BoxGeometry(.8,.04,.25),dark);t.position.z=-.78;g.add(t);
+ const fin=new THREE.Mesh(new THREE.BoxGeometry(.04,.45,.3),nose);fin.position.set(0,.24,-.78);g.add(fin);
+ return g}
+const yawG=new THREE.Group(),pitchG=new THREE.Group(),rollG=new THREE.Group();
+const rY=ring(2.3,BLUE);rY.rotation.x=Math.PI/2;yawG.add(rY,line(Y,2.9,BLUE));
+const rP=ring(1.95,GREEN);rP.rotation.y=Math.PI/2;pitchG.add(rP,line(X,2.5,GREEN));
+const rR=ring(1.6,RED);rollG.add(rR,line(Z,2.1,RED));
+rollG.add(makePlane());pitchG.add(rollG);yawG.add(pitchG);scene.add(yawG);
+const qG=new THREE.Group();qG.add(makePlane(),line(X,1.5,GREEN),line(Y,1.0,BLUE),line(Z,1.6,RED));qG.visible=false;scene.add(qG);
+const arrow=new THREE.ArrowHelper(Y,new THREE.Vector3(),2.7,0xEF9F27,.32,.2);arrow.visible=false;scene.add(arrow);
+
+let th=.75,ph=.38,drag=null;
+wrap.addEventListener('pointerdown',ev=>{drag=[ev.clientX,ev.clientY];wrap.style.cursor='grabbing';wrap.setPointerCapture(ev.pointerId)});
+wrap.addEventListener('pointermove',ev=>{if(!drag)return;th-=(ev.clientX-drag[0])*.008;ph=Math.max(-1.2,Math.min(1.35,ph+(ev.clientY-drag[1])*.008));drag=[ev.clientX,ev.clientY]});
+wrap.addEventListener('pointerup',()=>{drag=null;wrap.style.cursor='grab'});
+new ResizeObserver(()=>{renderer.setSize(wrap.clientWidth,H);cam.aspect=wrap.clientWidth/H;cam.updateProjectionMatrix()}).observe(wrap);
+
+let mode='e',e={y:0,p:0,r:0},msg=null,busy=false;
+const st=$('st');
+function setStatus(t,kind){st.innerHTML=t;st.style.background=kind==='bad'?'var(--bg-danger)':kind==='good'?'var(--bg-success)':'var(--surface-1)';st.style.color=kind==='bad'?'var(--text-danger)':kind==='good'?'var(--text-success)':'var(--text-primary)'}
+function applyE(){yawG.rotation.y=e.y*D;pitchG.rotation.x=e.p*D;rollG.rotation.z=e.r*D;
+ for(const k of['y','p','r']){$('s'+k).value=Math.round(e[k]);$('v'+k).textContent=Math.round(e[k])+'°'}
+ const locked=Math.abs(e.p)>=85;
+ if(msg)setStatus(msg,locked?'bad':'');
+ else if(locked)setStatus('万向锁！中环转了 90°，<b>蓝色外环和红色内环重合了</b>，它们的转轴（蓝线、红线）也叠在一起。现在拖“偏航”和拖“翻滚”效果一模一样。','bad');
+ else setStatus('三个环各管一根轴，互不干扰。试试把“俯仰”拖到最左边（-90°）。','')}
+['y','p','r'].forEach(k=>$('s'+k).addEventListener('input',ev=>{if(busy)return;msg=null;e[k]=+ev.target.value;applyE()}));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function tween(to,ms){return new Promise(res=>{const from={...e},t0=performance.now();(function step(t){let k=Math.min(1,(t-t0)/ms);k=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;for(const key in to)e[key]=from[key]+(to[key]-from[key])*k;applyE();k<1?requestAnimationFrame(step):res()})(t0)})}
+async function demo(){if(busy)return;busy=true;
+ msg='第 1 步：复位，三个环互相垂直。';await tween({y:0,p:0,r:0},700);await wait(700);
+ msg='第 2 步：转中环，让机头慢慢抬到朝天……';await tween({p:-90},1800);
+ msg='看！<b>蓝色外环和红色内环重合了</b>，蓝线和红线也叠成一条竖线。';await wait(2000);
+ msg='第 3 步：转外环（偏航）：飞机绕那根竖线原地打转……';await tween({y:50},1100);await tween({y:0},1100);
+ msg='第 4 步：再转内环（翻滚）：<b>还是绕同一根竖线打转！</b>两个旋钮干的是同一件事。';await tween({r:50},1100);await tween({r:0},1100);
+ msg='结论：3 个旋钮只剩 2 种有效转法，<b>“机头往侧面摆”这个方向被锁死了</b>，这就是万向锁。切到“四元数”看看它怎么解决。';applyE();busy=false}
+function resetE(){if(busy)return;msg=null;tween({y:0,p:0,r:0},700)}
+
+let q=new THREE.Quaternion(),rate={x:0,y:0,z:0},slerping=false;
+document.querySelectorAll('.hb').forEach(b=>{const ax=b.dataset.ax,s=+b.dataset.s;
+ b.addEventListener('pointerdown',ev=>{ev.preventDefault();rate[ax]=s});
+ ['pointerup','pointerleave','pointercancel'].forEach(n=>b.addEventListener(n,()=>{rate[ax]=0}))});
+function slerpTo(deg){const a=q.clone(),b=new THREE.Quaternion().setFromEuler(new THREE.Euler(deg*D,0,0,'YXZ')),t0=performance.now();slerping=true;
+ (function step(t){let k=Math.min(1,(t-t0)/1400);k=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;q.copy(a).slerp(b,k);if(k<1)requestAnimationFrame(step);else{slerping=false;
+  if(deg!==0)setStatus('机头已朝天（就是欧拉角刚才锁死的姿势）。现在按住“左摆/右摆”，机头照样能往侧面摆，<b>没有锁</b>。','good')}})(t0)}
+const LEG_E='<span style="margin-right:14px"><span class="dot" style="background:#378ADD"></span>外环：偏航（左右转）</span><span style="margin-right:14px"><span class="dot" style="background:#639922"></span>中环：俯仰（抬头低头）</span><span><span class="dot" style="background:#E24B4A"></span>内环：翻滚（左右歪）</span>';
+const LEG_Q='<span style="margin-right:14px"><span class="dot" style="background:#EF9F27"></span>黄色箭头：四元数代表的“一根轴”</span><span>短彩线：飞机自身的三根轴（跟着飞机走）</span>';
+function setMode(m){mode=m;$('mE').classList.toggle('on',m==='e');$('mQ').classList.toggle('on',m==='q');
+ $('pE').style.display=m==='e'?'':'none';$('pQ').style.display=m==='q'?'':'none';
+ yawG.visible=m==='e';qG.visible=m==='q';$('legend').innerHTML=m==='e'?LEG_E:LEG_Q;
+ if(m==='q'){q.setFromEuler(new THREE.Euler(e.p*D,e.y*D,e.r*D,'YXZ'));
+  setStatus('四元数模式：没有环了。每次都绕<b>飞机自己身上的轴</b>转一点点，再把结果“乘”起来，不存在“两个环重合”，所以永远不会锁。','good')}
+ else{const eu=new THREE.Euler().setFromQuaternion(q,'YXZ');msg=null;e={p:eu.x/D,y:eu.y/D,r:eu.z/D};applyE()}}
+const dq=new THREE.Quaternion(),axes={x:X,y:Y,z:Z};
+function updQ(){qG.quaternion.copy(q);let w=q.w,x=q.x,y=q.y,z=q.z;if(w<0){w=-w;x=-x;y=-y;z=-z}
+ const ang=2*Math.acos(Math.min(1,w)),s=Math.sqrt(Math.max(0,1-w*w));
+ let txt='q = ( w '+w.toFixed(2)+',  x '+x.toFixed(2)+',  y '+y.toFixed(2)+',  z '+z.toFixed(2)+' )<br>';
+ if(s<1e-3){arrow.visible=false;txt+='含义：没有旋转（初始姿态）'}
+ else{arrow.visible=true;arrow.setDirection(new THREE.Vector3(x/s,y/s,z/s));txt+='含义：从初始姿态出发，绕<span style="color:var(--text-warning)">黄色箭头</span>一次性转 '+Math.round(ang/D)+'°'}
+ $('qr').innerHTML=txt}
+let last=performance.now();
+function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;
+ if(mode==='q'){if(!slerping)for(const k in rate)if(rate[k]){dq.setFromAxisAngle(axes[k],rate[k]*1.3*dt);q.multiply(dq).normalize()}updQ()}else arrow.visible=false;
+ const R=8.2;cam.position.set(R*Math.cos(ph)*Math.sin(th),R*Math.sin(ph),R*Math.cos(ph)*Math.cos(th));cam.lookAt(0,0,0);
+ renderer.render(scene,cam);requestAnimationFrame(loop)}
+setMode('e');requestAnimationFrame(loop);
+</script>
+</body>
+</html>

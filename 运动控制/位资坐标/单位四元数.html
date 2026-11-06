@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>单位四元数：从零理解</title>
+<style>
+:root{--bg:#faf9f5;--card:#ffffff;--soft:#f1efe8;--text:#1f1e1d;--sec:#5f5e5a;--muted:#888780;--border:#d3d1c7;--accent:#185FA5;--accent-bg:#E6F1FB;--danger:#A32D2D;--success:#3B6D11}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2928;--soft:#333230;--text:#ecebe6;--sec:#b4b2a9;--muted:#888780;--border:#444441;--accent:#85B7EB;--accent-bg:#0C447C;--danger:#F09595;--success:#97C459}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.8;font-size:16px}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:28px;font-weight:500;margin:0 0 6px}
+h2{font-size:21px;font-weight:500;margin:48px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+h3{font-size:17px;font-weight:500;margin:24px 0 6px}
+p.lead{color:var(--sec);margin:0 0 24px}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin:18px 0}
+.key{border-left:3px solid var(--accent);background:var(--accent-bg);padding:12px 16px;margin:18px 0}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer}
+button:hover{background:var(--soft)}
+button.on{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+input[type=range]{accent-color:var(--accent)}
+.small{font-size:13px;color:var(--sec);line-height:1.6}
+.pill{display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;font-size:13px;border:1px solid var(--border);color:var(--sec);cursor:pointer}
+.pill.on{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+.ctl{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.ctl label{font-size:13px;color:var(--sec);min-width:64px}
+.ctl span{font-size:13px;font-weight:500;min-width:44px;text-align:right}
+.bar{display:flex;align-items:center;gap:8px;font-family:"SF Mono",Menlo,monospace;font-size:13px;margin:6px 0}
+.track{flex:1;height:10px;background:var(--soft);border-radius:5px;position:relative}
+.track i{position:absolute;top:0;height:10px;border-radius:5px}
+.track b{position:absolute;left:50%;top:-3px;width:1px;height:16px;background:var(--muted)}
+.mq{display:grid;grid-template-columns:repeat(3,60px);gap:4px;font-family:"SF Mono",Menlo,monospace;font-size:13px}
+.mq div{padding:6px 0;text-align:center;border-radius:6px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;align-items:start}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:640px){.two,.pair{grid-template-columns:1fr}}
+.stat{background:var(--soft);border-radius:8px;padding:10px 12px;margin-top:6px}
+canvas{display:block}
+</style>
+</head>
+<body>
+<main>
+<h1>单位四元数：从零理解</h1>
+<p class="lead">位姿描述的学习顺序：旋转矩阵 → 欧拉角 / RPY → 轴角 → <b>单位四元数</b> → 齐次变换矩阵。四元数是从“轴角”变来的，所以从轴角讲起。</p>
+
+<h2>1. 五步交互教程</h2>
+<p>点“下一步”往下走，每一步都可以拖滑块、点播放、拖动画面换视角。</p>
+<div class="card">
+  <div style="display:flex;align-items:center;gap:8px;margin:0 0 12px">
+    <div id="pills" style="display:flex;gap:6px"></div>
+    <button id="prev" style="margin-left:auto">上一步</button>
+    <button id="next">下一步</button>
+  </div>
+  <div id="title" style="font-size:17px;font-weight:500;margin:0 0 4px"></div>
+  <div id="desc" class="small" style="font-size:14px;margin:0 0 14px;min-height:48px"></div>
+  <div id="gAxis">
+    <div class="ctl"><label>轴的方位</label><input type="range" id="az" min="0" max="360" step="1" value="30" style="flex:1"><span id="azO">30°</span></div>
+    <div class="ctl"><label>轴的仰角</label><input type="range" id="el" min="-90" max="90" step="1" value="50" style="flex:1"><span id="elO">50°</span></div>
+  </div>
+  <div id="gAng" class="ctl"><label>转角 θ</label><input type="range" id="th" min="0" max="360" step="1" value="90" style="flex:1"><span id="thO">90°</span><button id="play1">播放</button></div>
+  <div id="gT" class="ctl"><label>插值 t</label><input type="range" id="tt" min="0" max="100" step="1" value="0" style="flex:1"><span id="tO">0.00</span><button id="play2">播放</button></div>
+  <div class="two" style="margin-top:6px">
+    <canvas id="cv" style="width:100%;height:330px;cursor:grab;touch-action:none"></canvas>
+    <div id="panel" style="font-size:13px"></div>
+  </div>
+  <div class="small" style="margin-top:6px;color:var(--muted)">琥珀色线 = 旋转轴，彩色箭头 = 物体自身的 x、y、z 方向，虚线 = 旋转前</div>
+</div>
+
+<h2>2. 最重要的一个公式</h2>
+<pre>q = ( cos(θ/2),  sin(θ/2)·nx,  sin(θ/2)·ny,  sin(θ/2)·nz )
+       ↑ w              ↑ x, y, z：轴的方向，按比例缩放</pre>
+<p>例子：绕 z 轴转 90°。轴 n = (0, 0, 1)，θ/2 = 45°，cos 45° ≈ sin 45° ≈ 0.71，所以</p>
+<pre>q = (0.71, 0×0.71, 0×0.71, 1×0.71) = (0.71, 0, 0, 0.71)</pre>
+<p>可以在第 2 步里把仰角拉到 90°（轴朝正上方，就是 z 轴），θ 设成 90°，验证一下。</p>
+<h3>怎么理解这 4 个数</h3>
+<ul>
+<li><b>w 说的是“转了多少”</b>：不转时 w = 1，转得越多 w 越小。</li>
+<li><b>x、y、z 说的是“绕哪根轴转”</b>：它们的方向就是轴的方向。</li>
+<li><b>四个数的平方和永远是 1</b>，所以叫“单位”四元数。程序里如果算出来不等于 1，就要“归一化”把它拉回来。</li>
+<li><b>q 和 −q 表示同一个姿态</b>，这是半角 θ/2 带来的（第 3 步）。</li>
+</ul>
+<h3>暂时可以跳过的部分</h3>
+<p>教科书会把四元数写成 w + xi + yj + zk，并有一套 i² = j² = k² = −1 的乘法规则，用来推导“两次旋转怎么合成一次”。零基础先掌握上面的内容就够了，学旋转合成时再回来看会顺很多。</p>
+
+<h2>3. 插值：为什么四元数比欧拉角好</h2>
+<p><b>什么是插值？</b>机器人手臂从姿态 A 转到姿态 B，不能一下子跳过去，得算出中间每一刻的姿态，一帧一帧地走。用 t 表示进度：t = 0 在 A，t = 1 在 B，t = 0.5 就是半路。</p>
+<p><b>什么是欧拉角？</b>把旋转拆成三个角度：绕 z 转多少（偏航）、绕 y 转多少（俯仰）、绕 x 转多少（横滚）。最直接的插值做法是让这三个数各自匀速地从 A 的值变到 B 的值，问题就出在这里。</p>
+<p>下面左右两边从同一个 A 转到同一个 B。橙色曲线是“机头”（x 箭头尖端）一路走过的轨迹：</p>
+<div class="card">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px">
+    <button class="sc on" data-s="0">场景 1：绕远路</button>
+    <button class="sc" data-s="1">场景 2：走弯路</button>
+    <button id="play3" style="margin-left:auto">播放</button>
+  </div>
+  <div id="sdesc" class="small" style="font-size:14px;margin:0 0 10px"></div>
+  <div class="ctl"><label>进度 t</label><input type="range" id="t3" min="0" max="100" step="1" value="0" style="flex:1"><span id="t3O">0.00</span></div>
+  <div class="pair">
+    <div><div style="font-size:15px;font-weight:500">欧拉角插值</div><canvas id="c0" style="width:100%;height:270px;cursor:grab;touch-action:none"></canvas><div class="stat" id="s0"></div></div>
+    <div><div style="font-size:15px;font-weight:500">四元数插值（slerp）</div><canvas id="c1" style="width:100%;height:270px;cursor:grab;touch-action:none"></canvas><div class="stat" id="s1"></div></div>
+  </div>
+  <div class="small" style="margin-top:8px;color:var(--muted)">虚线方块 = 起点 A，空心圆 = 终点 B 的机头位置，橙色曲线 = 机头走过的路</div>
+</div>
+<p><b>问题出在哪？</b>欧拉角插值只是把三个数字各自匀速变化，并不知道它们合起来代表空间里的哪个姿态：</p>
+<ul>
+<li><b>场景 1，绕远路</b>：170° 和 −170° 在数字上差 340，但在空间里只差 20°。欧拉角只认数字，所以真的转了 340°。</li>
+<li><b>场景 2，走弯路</b>：三个角度各自匀速变化，但“先绕 z、再绕 y、再绕 x”是叠在一起起作用的，合起来机头走出一条歪扭的路，转得比需要的多，转速也不均匀。</li>
+</ul>
+<p><b>四元数为什么没这个问题？</b>任何两个姿态之间，都能找到一根轴，只绕它转一次就到位。slerp 就是找到这根轴，沿着它匀速转过去，所以机头走的总是一段圆弧，转的角度正好等于 A 和 B 实际相差的角度。对机器人来说，绕远路浪费时间、可能撞到东西，转速忽快忽慢电机也受不了。</p>
+
+<h2>4. 四元数是怎么“知道”两个姿态很近的？</h2>
+<p>靠一次很简单的计算：把两个四元数的 4 个数对应相乘再加起来，叫“点积”。结果越接近 1（或 −1），两个姿态就越接近。用场景 1 的数字一步步算：</p>
+<h3>第 1 步：把 A 和 B 写成四元数</h3>
+<p>两个都是绕 z 轴转，套公式 q = (cos(θ/2), 0, 0, sin(θ/2))：</p>
+<pre>A：θ = 170°，θ/2 = 85°     q_A = ( 0.087,  0,  0,  0.996)
+B：θ = −170°，θ/2 = −85°   q_B = ( 0.087,  0,  0, −0.996)</pre>
+<p>看起来 q_A 和 q_B 也差很远：最后一个数一正一负。</p>
+<h3>第 2 步：想起“q 和 −q 是同一个姿态”</h3>
+<p>B 也可以写成 −q_B，4 个数全部变号：</p>
+<pre>−q_B = (−0.087,  0,  0,  0.996)
+q_A  = ( 0.087,  0,  0,  0.996)</pre>
+<p>这下两组数几乎一样了。B 换了一种写法，马上就和 A 挨在一起。</p>
+<h3>第 3 步：用点积量一量有多近</h3>
+<pre>q_A · q_B    = 0.087×0.087 + 0 + 0 + 0.996×(−0.996) = −0.985
+q_A · (−q_B) =   −0.0076   + 0 + 0 +      0.992     =  0.985</pre>
+<div class="key">slerp 的规则：<b>如果点积是负的，就把 B 变号，改用 −q_B</b>。这一步保证它总是走近的那条路。</div>
+<h3>第 4 步：把“有多近”换算成角度</h3>
+<pre>点积 = cos(两个四元数之间的夹角)
+夹角 = arccos(0.985) ≈ 10°
+实际要转的角度 = 2 × 10° = 20°</pre>
+<p>为什么 ×2？因为四元数里装的是半角 θ/2，换算回真实角度要乘 2。</p>
+<div class="key">四元数并不是“聪明”，而是它的数字天生就和空间里的姿态对得上：姿态挨得近，四元数的 4 个数也挨得近（最多差一个正负号，查一下点积正负就能处理）。欧拉角没有这个性质：170° 和 −170° 在空间里挨着，数字上却一个在最大端、一个在最小端，中间隔着 ±180° 这条“接缝”。</div>
+</main>
+
+<script>
+const COL={x:'#D85A30',y:'#1D9E75',z:'#7F77DD',w:'#888780',ax:'#EF9F27'};
+const TINT={x:'rgba(216,90,48,.15)',y:'rgba(29,158,117,.15)',z:'rgba(127,119,221,.18)'};
+const D2R=Math.PI/180,$=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const norm=v=>{const l=Math.hypot(...v);return v.map(a=>a/l)};
+const qAA=(n,t)=>{const s=Math.sin(t/2);return[Math.cos(t/2),n[0]*s,n[1]*s,n[2]*s]};
+const qMul=(a,b)=>[a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]];
+const qEul=e=>{const[y,p,r]=e.map(v=>v*D2R/2);return qMul(qMul([Math.cos(y),0,0,Math.sin(y)],[Math.cos(p),0,Math.sin(p),0]),[Math.cos(r),Math.sin(r),0,0])};
+function qM(q){const[w,x,y,z]=q;return[[1-2*(y*y+z*z),2*(x*y-w*z),2*(x*z+w*y)],[2*(x*y+w*z),1-2*(x*x+z*z),2*(y*z-w*x)],[2*(x*z-w*y),2*(y*z+w*x),1-2*(x*x+y*y)]]}
+function slerp(a,b,t){let d=a.reduce((s,v,i)=>s+v*b[i],0);if(d<0){b=b.map(v=>-v);d=-d}
+ if(d>0.9995)return norm(a.map((v,i)=>v+t*(b[i]-v)));const o=Math.acos(d),s=Math.sin(o);
+ return a.map((v,i)=>(Math.sin((1-t)*o)*v+Math.sin(t*o)*b[i])/s)}
+const mul=(M,p)=>[0,1,2].map(i=>M[i][0]*p[0]+M[i][1]*p[1]+M[i][2]*p[2]);
+const f2=v=>{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const cam={yaw:-0.6,pitch:0.4};
+function makeView(cv,scale){const ctx=cv.getContext('2d');let W,H;
+ return{ctx,begin(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H)},
+ pr(p){const cy=Math.cos(cam.yaw),sy=Math.sin(cam.yaw),cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp,s=Math.min(W,H)*scale;return[W/2+X*s,H/2-Y*s+8]},
+ ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.setLineDash([])},
+ arrow(a,b,c,w){this.ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(b[0],b[1]);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}}}
+function cube(h){const V=[];for(const a of[-h,h])for(const b of[-h,h])for(const c of[-h,h])V.push([a,b,c]);return V}
+const EDGES=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
+const redrawAll=[];
+function dragCam(cv){let d=null;cv.onpointerdown=e=>{d=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+ cv.onpointermove=e=>{if(!d)return;cam.yaw-=(e.clientX-d[0])*0.01;cam.pitch=Math.max(-1.4,Math.min(1.4,cam.pitch+(e.clientY-d[1])*0.01));d=[e.clientX,e.clientY];redrawAll.forEach(f=>f())};cv.onpointerup=()=>d=null}
+
+(function(){
+const S=[
+['第 1 步：任何旋转 = 一根轴 + 一个角度','不管物体怎么转，总能找到一根轴，让它只绕这根轴转一次就到位（欧拉旋转定理）。所以描述一个姿态只需要：轴的方向 n，加上转角 θ。拖动三个滑块试试。'],
+['第 2 步：把轴和角装进 4 个数','单位四元数 q = (w, x, y, z)，其中 w = cos(θ/2)，而 (x, y, z) = sin(θ/2) × 轴的方向 n。右边是这 4 个数，它们的平方和永远等于 1，所以叫“单位”四元数。'],
+['第 3 步：为什么用一半的角度 θ/2','把 θ 拉到 360°：物体转了一整圈回到原样，可 q 变成了 (−1, 0, 0, 0)。要转满 720° q 才回到 (1, 0, 0, 0)。结论：q 和 −q 表示同一个姿态。'],
+['第 4 步：四元数和旋转矩阵可以互相换算','同一个姿态，四元数用 4 个数，旋转矩阵用 9 个数。右边的矩阵由 q 直接算出，它的每一列还是“x、y、z 箭头转到了哪里”。'],
+['第 5 步：为什么机器人爱用四元数：平滑插值','从姿态 A（虚线）转到姿态 B，用四元数插值（slerp）只需让 t 从 0 走到 1，物体就沿最短路径匀速转过去。详见第 3 节的对比。']];
+let step=0,p1=false,p2=false;const cv=$('cv'),v=makeView(cv,0.28),V=cube(0.5);
+const axis=()=>{const a=$('az').value*D2R,e=$('el').value*D2R;return[Math.cos(e)*Math.cos(a),Math.cos(e)*Math.sin(a),Math.sin(e)]};
+const qA=[1,0,0,0],qB=qAA(norm([1,2,1]),160*D2R);
+function body(M,ghost){const P=V.map(p=>v.pr(mul(M,p))),sec=css('--sec'),O=v.pr([0,0,0]),ctx=v.ctx;
+ if(!ghost){ctx.fillStyle='rgba(127,119,221,.12)';ctx.beginPath();[1,3,7,5].forEach((i,k)=>k?ctx.lineTo(P[i][0],P[i][1]):ctx.moveTo(P[i][0],P[i][1]));ctx.fill()}
+ EDGES.forEach(([a,b])=>v.ln(P[a],P[b],ghost?css('--muted'):sec,1,ghost?[4,4]:[]));
+ [['x',[1,0,0]],['y',[0,1,0]],['z',[0,0,1]]].forEach(([k,u])=>{const t=v.pr(mul(M,u).map(a=>a*1.25));
+  if(ghost)v.ln(O,t,COL[k],1.2,[4,4]);else{v.arrow(O,t,COL[k],2.5);ctx.fillStyle=COL[k];ctx.font='500 13px sans-serif';ctx.fillText(k,t[0]+5,t[1]-5)}})}
+function bars(q){return['w','x','y','z'].map((k,i)=>{const x=q[i],l=x<0?50+x*50:50,w=Math.abs(x)*50;
+ return `<div class="bar"><span style="color:${COL[k]};width:12px">${k}</span><div class="track"><b></b><i style="left:${l}%;width:${w}%;background:${COL[k]}"></i></div><span style="width:44px;text-align:right">${f2(x)}</span></div>`}).join('')}
+function draw(){v.begin();let q,html='';const ctx=v.ctx;
+ if(step<4){const n=axis(),th=$('th').value*D2R;q=qAA(n,th);
+  v.ln(v.pr(n.map(a=>a*-1.8)),v.pr(n.map(a=>a*1.8)),COL.ax,2);
+  const tip=v.pr(n.map(a=>a*1.8));ctx.fillStyle=COL.ax;ctx.font='500 13px sans-serif';ctx.fillText('n',tip[0]+6,tip[1]);
+  body([[1,0,0],[0,1,0],[0,0,1]],true);body(qM(q),false);
+  if(step===0)html=`<div class="small">轴的方向 n</div><div style="font-family:monospace;font-size:14px">(${n.map(f2).join(', ')})</div><div class="small" style="margin-top:14px">转角 θ</div><div style="font-family:monospace;font-size:14px">${$('th').value}°</div><div class="small" style="margin-top:14px;color:var(--muted)">轴 3 个数 + 角 1 个数，一共 4 个数就描述了姿态</div>`;
+  else if(step<3){const s=q.reduce((a,x)=>a+x*x,0);html=`<div class="small">四元数 q</div>${bars(q)}<div style="margin-top:10px;font-family:monospace">w²+x²+y²+z² = ${f2(s)}</div>`;
+   if(step===2){const deg=+$('th').value;html+=`<div class="small" style="margin-top:10px">θ = ${deg}°，θ/2 = ${deg/2}°</div>`;
+    if(deg===360)html+=`<div style="margin-top:6px;color:var(--danger)">物体和 0° 时一模一样，但 q 是负的</div>`;
+    if(deg===720)html+=`<div style="margin-top:6px;color:var(--success)">720°：q 回到了 (1, 0, 0, 0)</div>`}}
+  else{const M=qM(q),k=['x','y','z'];html=`<div class="small">q = (${q.map(f2).join(', ')})</div><div class="small" style="margin:8px 0 6px">换算出的旋转矩阵</div><div class="mq">`;
+   for(let i=0;i<3;i++)for(let j=0;j<3;j++)html+=`<div style="background:${TINT[k[j]]}">${f2(M[i][j])}</div>`;
+   html+=`</div><div style="display:grid;grid-template-columns:repeat(3,60px);gap:4px;font-size:12px;text-align:center;margin-top:4px"><span style="color:${COL.x}">x 去哪</span><span style="color:${COL.y}">y 去哪</span><span style="color:${COL.z}">z 去哪</span></div>`}}
+ else{const t=$('tt').value/100;q=slerp(qA,qB,t);body(qM(qA),true);
+  const B=qM(qB);[['x',[1,0,0]],['y',[0,1,0]],['z',[0,0,1]]].forEach(([k,u])=>{const p=v.pr(mul(B,u).map(a=>a*1.25));ctx.beginPath();ctx.arc(p[0],p[1],4,0,7);ctx.strokeStyle=COL[k];ctx.lineWidth=1.5;ctx.stroke()});
+  body(qM(q),false);
+  html=`<div class="small">当前 q（t = ${f2(t)}）</div>${bars(q)}<div class="small" style="margin-top:10px;color:var(--muted)">虚线 = 起点 A<br>空心圆 = 终点 B 的箭头位置</div>`}
+ $('panel').innerHTML=html}
+function setStep(i){step=i;$('title').textContent=S[i][0];$('desc').textContent=S[i][1];
+ $('gAxis').style.display=i<4?'block':'none';$('gAng').style.display=i<4?'flex':'none';$('gT').style.display=i===4?'flex':'none';
+ const th=$('th');th.max=i===2?720:360;if(+th.value>+th.max)th.value=th.max;$('thO').textContent=th.value+'°';
+ $('pills').innerHTML=S.map((_,k)=>`<span class="pill ${k===i?'on':''}" data-k="${k}">${k+1}</span>`).join('');
+ document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>setStep(+p.dataset.k));draw()}
+$('prev').onclick=()=>setStep((step+4)%5);$('next').onclick=()=>setStep((step+1)%5);
+[['az','azO'],['el','elO'],['th','thO']].forEach(([a,b])=>$(a).oninput=()=>{$(b).textContent=$(a).value+'°';draw()});
+$('tt').oninput=()=>{$('tO').textContent=f2($('tt').value/100);draw()};
+function loop1(){if(!p1)return;const th=$('th');th.value=(+th.value+2)%(+th.max+1);$('thO').textContent=th.value+'°';draw();requestAnimationFrame(loop1)}
+function loop2(){if(!p2)return;const t=$('tt');t.value=(+t.value+1)%101;$('tO').textContent=f2(t.value/100);draw();requestAnimationFrame(loop2)}
+$('play1').onclick=()=>{p1=!p1;$('play1').textContent=p1?'暂停':'播放';if(p1)loop1()};
+$('play2').onclick=()=>{p2=!p2;$('play2').textContent=p2?'暂停':'播放';if(p2)loop2()};
+dragCam(cv);redrawAll.push(draw);setStep(0);
+})();
+
+(function(){
+const SC=[{a:[170,0,0],b:[-170,0,0],d:'A 是偏航 170°，B 是偏航 −170°，其实两者只差 20°。可欧拉角插值只看数字：170 → 0 → −170，于是物体反着转了 340° 大半圈。四元数知道它们本来就很近，只转 20°。'},
+{a:[0,0,0],b:[120,50,100],d:'A 是不转，B 是偏航 120°、俯仰 50°、横滚 100°。欧拉角让三个角度各自匀速变化，合在一起机头走出一条弯弯曲曲的路。四元数直接找到一根轴转过去，机头走的是一段最短的圆弧。'}];
+let sc=0,t=0,playing=false;const V=cube(0.4);
+const eul=(s,t)=>qEul(s.a.map((x,i)=>x+t*(s.b[i]-x)));const sl=(s,t)=>slerp(qEul(s.a),qEul(s.b),t);const F=[eul,sl];
+const ang=(a,b)=>2*Math.acos(Math.min(1,Math.abs(a.reduce((s,x,i)=>s+x*b[i],0))))/D2R;
+const views=[makeView($('c0'),0.3),makeView($('c1'),0.3)];
+function draw1(k){const v=views[k],ctx=v.ctx;v.begin();const s=SC[sc],f=F[k],O=v.pr([0,0,0]),sec=css('--sec');
+ [[1,0,0],[0,1,0],[0,0,1]].forEach(u=>v.ln(v.pr(u.map(a=>a*-1.5)),v.pr(u.map(a=>a*1.5)),css('--border'),0.8));
+ const MA=qM(qEul(s.a));EDGES.forEach(([a,b])=>v.ln(v.pr(mul(MA,V[a])),v.pr(mul(MA,V[b])),css('--muted'),1,[4,4]));
+ const pts=[];for(let i=0;i<=100;i++)pts.push(v.pr(mul(qM(f(s,i/100)),[1.3,0,0])));
+ ctx.strokeStyle='rgba(216,90,48,.25)';ctx.lineWidth=2;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+ const n=Math.round(t*100);ctx.strokeStyle='#D85A30';ctx.lineWidth=2.5;ctx.beginPath();pts.slice(0,n+1).forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+ const bp=pts[100];ctx.beginPath();ctx.arc(bp[0],bp[1],6,0,7);ctx.strokeStyle='#D85A30';ctx.lineWidth=1.5;ctx.stroke();
+ const M=qM(f(s,t)),P=V.map(p=>v.pr(mul(M,p)));
+ ctx.fillStyle='rgba(127,119,221,.14)';ctx.beginPath();[1,3,7,5].forEach((i,j)=>j?ctx.lineTo(P[i][0],P[i][1]):ctx.moveTo(P[i][0],P[i][1]));ctx.fill();
+ EDGES.forEach(([a,b])=>v.ln(P[a],P[b],sec,1));
+ const tip=v.pr(mul(M,[1.3,0,0]));v.ln(O,tip,'#D85A30',3);ctx.fillStyle='#D85A30';ctx.beginPath();ctx.arc(tip[0],tip[1],4,0,7);ctx.fill();
+ ctx.font='12px sans-serif';ctx.fillText('机头',tip[0]+6,tip[1]-6);
+ let tot=0;for(let i=0;i<100;i++)tot+=ang(f(s,i/100),f(s,(i+1)/100));
+ const cur=s.a.map((x,i)=>x+t*(s.b[i]-x));
+ $('s'+k).innerHTML=`<div class="small">全程一共转了</div><div style="font-size:22px;font-weight:500;color:${k===0?'var(--danger)':'var(--success)'}">${Math.round(tot)}°</div>`+
+ (k===0?`<div class="small" style="font-family:monospace">偏航 ${Math.round(cur[0])}° 俯仰 ${Math.round(cur[1])}° 横滚 ${Math.round(cur[2])}°</div>`:`<div class="small">A 和 B 实际相差 ${Math.round(tot)}°，这就是最短路径</div>`)}
+function draw(){draw1(0);draw1(1)}
+function setSc(i){sc=i;document.querySelectorAll('.sc').forEach(b=>b.classList.toggle('on',+b.dataset.s===i));$('sdesc').textContent=SC[i].d;draw()}
+document.querySelectorAll('.sc').forEach(b=>b.onclick=()=>setSc(+b.dataset.s));
+$('t3').oninput=()=>{t=$('t3').value/100;$('t3O').textContent=t.toFixed(2);draw()};
+function loop(){if(!playing)return;let x=+$('t3').value+1;if(x>100)x=0;$('t3').value=x;t=x/100;$('t3O').textContent=t.toFixed(2);draw();requestAnimationFrame(loop)}
+$('play3').onclick=()=>{playing=!playing;$('play3').textContent=playing?'暂停':'播放';if(playing)loop()};
+dragCam($('c0'));dragCam($('c1'));redrawAll.push(draw);setSc(0);
+})();
+window.addEventListener('resize',()=>redrawAll.forEach(f=>f()));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>redrawAll.forEach(f=>f()));
+</script>
+</body>
+</html>

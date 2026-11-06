@@ -1,0 +1,600 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>三关节机械臂：先在墙里算，再转身</title><style>
+:root{--bg:#faf9f5;--card:#ffffff;--soft:#f1efe8;--text:#1f1e1d;--sec:#5f5e5a;--muted:#888780;--border:#d3d1c7;--accent:#185FA5;--accent-bg:#E6F1FB}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2928;--soft:#333230;--text:#ecebe6;--sec:#b4b2a9;--muted:#888780;--border:#444441;--accent:#85B7EB;--accent-bg:#0C447C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.8;font-size:16px}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:28px;font-weight:500;margin:0 0 6px}
+h2{font-size:21px;font-weight:500;margin:48px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+h3{font-size:17px;font-weight:500;margin:24px 0 6px}
+p.lead{color:var(--sec);margin:0 0 24px}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:18px 0}
+.card iframe{width:100%;border:0;display:block;height:420px}
+.key{border-left:3px solid var(--accent);background:var(--accent-bg);padding:12px 16px;margin:18px 0}
+table{border-collapse:collapse;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--border);padding:6px 12px;text-align:left}
+th{background:var(--soft);font-weight:500}
+nav.toc{background:var(--soft);border-radius:10px;padding:12px 18px;margin:0 0 24px;font-size:15px}
+nav.toc a{color:var(--accent);text-decoration:none}
+</style></head><body><main>
+<h1>三关节机械臂：先在墙里算，再转身</h1>
+<p class="lead">从平面机械臂走向 3D 的第一步。不用 4×4 矩阵，只用你已经会的"乌龟"和 cos、sin。</p>
+<nav class="toc">1. 认识这台机械臂 · 2. 肩膀和手肘只在一面墙里动 · 3. 把墙平放着看：算 r 和 z · 4. 底座转身：什么变、什么不变 · 5. 从天花板往下看：把 r 拆成 x、y · 6. 合起来 · 练习题 · 总览动画</nav>
+
+<div class="key"><b>这一章的核心一句话：</b>3D 三关节机械臂 = 平面两节手臂（肩膀 + 手肘） + 底座转身。<br>
+① 用 θ₂、θ₃ 在竖直的墙里算出 r（往前多远）和 z（多高）<br>
+② 用 θ₁ 把 r 拆成 x、y，z 不变</div>
+
+<h2>1 + 2. 认识这台机械臂：肩膀和手肘只在一面"墙"里动</h2>
+<p>一台最常见的三关节机械臂（工业机械臂的前三轴就是这样）：</p>
+<ul>
+<li><b>关节 1（底座）</b>：整台机械臂绕竖直轴原地转身</li>
+<li><b>关节 2（肩膀）</b>：把大臂抬起来</li>
+<li><b>关节 3（手肘）</b>：弯小臂</li>
+</ul>
+<p>先点"显示那面墙"，再一次只动一个关节：</p>
+<div class="card"><iframe id="f1" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.jb.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+&lt;/style&gt;
+&lt;div style=&quot;display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px&quot;&gt;
+  &lt;button class=&quot;jb&quot; data-j=&quot;1&quot;&gt;动关节 1（底座）&lt;/button&gt;
+  &lt;button class=&quot;jb&quot; data-j=&quot;2&quot;&gt;动关节 2（肩膀）&lt;/button&gt;
+  &lt;button class=&quot;jb&quot; data-j=&quot;3&quot;&gt;动关节 3（手肘）&lt;/button&gt;
+  &lt;button id=&quot;wall&quot; style=&quot;margin-left:auto&quot;&gt;显示那面墙&lt;/button&gt;
+&lt;/div&gt;
+&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:340px;cursor:grab;touch-action:none&quot;&gt;&lt;/canvas&gt;
+&lt;div id=&quot;say&quot; style=&quot;font-size:15px;line-height:1.8;margin-top:8px;min-height:56px&quot;&gt;&lt;/div&gt;
+&lt;div style=&quot;font-size:12px;color:var(--text-muted)&quot;&gt;可以拖动画面换个角度看。&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const H0=1,A2=1.5,A3=1.2;let yaw=-0.9,pitch=0.35,J=0,ph=0,wall=false;
+const base={1:30,2:60,3:-60},amp={1:60,2:35,3:50};
+const SAY={0:&#x27;点上面的按钮，一次只让一个关节动。&#x27;,
+1:&#x27;&lt;b&gt;关节 1（底座）&lt;/b&gt;：整台机械臂原地&lt;b&gt;转身&lt;/b&gt;，像人在转椅上转。大臂、小臂的弯曲样子完全不变，只是朝向变了。打开&quot;那面墙&quot;看：整面墙跟着一起转。&#x27;,
+2:&#x27;&lt;b&gt;关节 2（肩膀）&lt;/b&gt;：把大臂&lt;b&gt;抬起、放下&lt;/b&gt;，小臂跟着一起动。打开&quot;那面墙&quot;看：手臂一直都待在这面墙里，没有离开。&#x27;,
+3:&#x27;&lt;b&gt;关节 3（手肘）&lt;/b&gt;：只弯&lt;b&gt;小臂&lt;/b&gt;，大臂不动。手臂也一直待在这面墙里。&#x27;};
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const ang={1:base[1],2:base[2],3:base[3]};if(J)ang[J]=base[J]+amp[J]*Math.sin(ph);
+ const t1=ang[1]*D,t2=ang[2]*D,t3=ang[3]*D,u=[Math.cos(t1),Math.sin(t1)],to3=(r,z)=&gt;[r*u[0],r*u[1],z];
+ const s=Math.min(W,H)*0.17,P=p=&gt;{const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp;return[W*0.5+X*s,H*0.82-Y*s]};
+ const ln=(a,b,c,w,dd)=&gt;{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(dd||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])};
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let i=-3;i&lt;=3;i++){ln(P([i,-3,0]),P([i,3,0]),b,0.5);ln(P([-3,i,0]),P([3,i,0]),b,0.5)}
+ if(wall){const q=[to3(-0.6,0),to3(3,0),to3(3,3.3),to3(-0.6,3.3)].map(P);ctx.fillStyle=&#x27;rgba(127,119,221,.14)&#x27;;ctx.strokeStyle=&#x27;rgba(127,119,221,.6)&#x27;;ctx.lineWidth=1;ctx.beginPath();q.forEach((p,i)=&gt;i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=&#x27;#534AB7&#x27;;ctx.font=&#x27;500 13px sans-serif&#x27;;const lp=P(to3(2.6,3.1));ctx.fillText(&#x27;那面墙&#x27;,lp[0],lp[1])}
+ const S=[0,0,H0],E=to3(A2*Math.cos(t2),H0+A2*Math.sin(t2)),T=to3(A2*Math.cos(t2)+A3*Math.cos(t2+t3),H0+A2*Math.sin(t2)+A3*Math.sin(t2+t3));
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);const bp=P([0,0,0]);ctx.fillRect(bp[0]-22,bp[1]-4,44,9);
+ ctx.lineCap=&#x27;round&#x27;;ln(P([0,0,0]),P(S),&#x27;rgba(136,135,128,.6)&#x27;,16);ln(P(S),P(E),&#x27;rgba(136,135,128,.6)&#x27;,12);ln(P(E),P(T),&#x27;rgba(136,135,128,.6)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ const jc=n=&gt;J===n?&#x27;#D85A30&#x27;:pri;
+ [[[0,0,0.25],1,&#x27;关节 1 底座&#x27;],[S,2,&#x27;关节 2 肩膀&#x27;],[E,3,&#x27;关节 3 手肘&#x27;]].forEach(([p,n,l])=&gt;{const q=P(p);ctx.fillStyle=jc(n);ctx.beginPath();ctx.arc(q[0],q[1],J===n?8:5,0,7);ctx.fill();ctx.font=(J===n?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;12px sans-serif&#x27;;ctx.fillText(l,q[0]+12,q[1]+4)});
+ const tp=P(T);ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(tp[0],tp[1],5,0,7);ctx.fill();ctx.fillStyle=pri;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;末端&#x27;,tp[0]+8,tp[1]-6);
+ if(J===1){ctx.strokeStyle=&#x27;#EF9F27&#x27;;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i&lt;=24;i++){const a=t1-0.6+1.2*i/24,q=P([0.9*Math.cos(a),0.9*Math.sin(a),0]);i?ctx.lineTo(...q):ctx.moveTo(...q)}ctx.stroke()}}
+function loop(){if(J){ph+=0.035;draw()}requestAnimationFrame(loop)}
+document.querySelectorAll(&#x27;.jb&#x27;).forEach(b=&gt;b.onclick=()=&gt;{const j=+b.dataset.j;J=J===j?0:j;ph=0;document.querySelectorAll(&#x27;.jb&#x27;).forEach(x=&gt;x.classList.toggle(&#x27;on&#x27;,+x.dataset.j===J));$(&#x27;say&#x27;).innerHTML=SAY[J];draw()});
+$(&#x27;wall&#x27;).onclick=()=&gt;{wall=!wall;$(&#x27;wall&#x27;).textContent=wall?&#x27;隐藏那面墙&#x27;:&#x27;显示那面墙&#x27;;draw()};
+let drag=null;cv.onpointerdown=e=&gt;{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=&gt;{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(-0.2,Math.min(1.4,pitch+(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()};
+cv.onpointerup=()=&gt;drag=null;$(&#x27;say&#x27;).innerHTML=SAY[0];window.addEventListener(&#x27;resize&#x27;,draw);draw();loop();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=1;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<p><b>两句话：</b></p>
+<ol>
+<li>肩膀和手肘动的时候，手臂一直待在那面墙里，不会跑出去。所以只看肩膀和手肘，它就是一条<b>立起来的平面两节手臂</b>，和第 8 题一样，只是从"平躺在地上"变成了"竖起来贴在墙上"。</li>
+<li>底座动的时候，整面墙跟着原地转。手臂在墙里的样子完全不变，只是朝向变了。</li>
+</ol>
+
+<h2>3. 把墙平放着看：算 r 和 z</h2>
+<p>站在墙的正前方看，这面墙就是一张平面的纸：<b>横着</b>是"离底座往前多远"，记作 <b>r</b>；<b>竖着</b>是"离地面多高"，记作 <b>z</b>。乌龟从<b>肩膀 (0, 1)</b> 出发，一开始面朝正前方：先转 θ₂、走 1.5（大臂），再转 θ₃、走 1.2（小臂）。</p>
+<div class="card"><iframe id="f2" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;.cal{font-family:var(--font-mono);font-size:13px;line-height:1.85;white-space:pre}&lt;/style&gt;
+&lt;div style=&quot;display:flex;gap:8px;align-items:center;margin:0 0 10px;flex-wrap:wrap&quot;&gt;
+  &lt;button id=&quot;go&quot;&gt;下一个动作&lt;/button&gt;&lt;button id=&quot;back&quot;&gt;上一个&lt;/button&gt;&lt;button id=&quot;reset&quot;&gt;重来&lt;/button&gt;
+  &lt;span id=&quot;cnt&quot; style=&quot;margin-left:auto;font-size:13px;color:var(--text-secondary)&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:16px;flex-wrap:wrap;margin:0 0 8px&quot;&gt;
+  &lt;div style=&quot;display:flex;align-items:center;gap:8px;flex:1;min-width:230px&quot;&gt;&lt;label style=&quot;font-size:13px;color:var(--text-secondary);min-width:84px&quot;&gt;θ₂ 肩膀&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;t2&quot; min=&quot;-30&quot; max=&quot;180&quot; step=&quot;15&quot; value=&quot;90&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;t2O&quot; style=&quot;font-size:13px;font-weight:500;min-width:40px&quot;&gt;90°&lt;/span&gt;&lt;/div&gt;
+  &lt;div style=&quot;display:flex;align-items:center;gap:8px;flex:1;min-width:230px&quot;&gt;&lt;label style=&quot;font-size:13px;color:var(--text-secondary);min-width:84px&quot;&gt;θ₃ 手肘&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;t3&quot; min=&quot;-150&quot; max=&quot;150&quot; step=&quot;15&quot; value=&quot;-90&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;t3O&quot; style=&quot;font-size:13px;font-weight:500;min-width:40px&quot;&gt;-90°&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start&quot;&gt;
+  &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:320px&quot;&gt;&lt;/canvas&gt;
+  &lt;div id=&quot;panel&quot; style=&quot;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const H0=1,A2=1.5,A3=1.2;let k=0,prog=1,anim=null;
+const f=v=&gt;{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const fp=v=&gt;{const s=f(v);return v&lt;-0.004?&#x27;(&#x27;+s+&#x27;)&#x27;:s};
+function acts(){const t2=+$(&#x27;t2&#x27;).value,t3=+$(&#x27;t3&#x27;).value;return[{type:&#x27;start&#x27;},{type:&#x27;turn&#x27;,v:t2},{type:&#x27;walk&#x27;,v:A2},{type:&#x27;turn&#x27;,v:t3},{type:&#x27;walk&#x27;,v:A3}]}
+function state(n,p){const L=acts();let x=0,y=H0,h=0;const path=[[0,H0]];for(let i=1;i&lt;=n;i++){const a=L[i],q=i===n?p:1;if(a.type===&#x27;turn&#x27;)h+=a.v*q;else{x+=a.v*q*Math.cos(h*D);y+=a.v*q*Math.sin(h*D);path.push([x,y])}}return{x,y,h,path}}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const sc=Math.min(W/5,H/4.2),ox=W*0.32,oy=H-0.45*sc,P=(x,y)=&gt;[ox+x*sc,oy-y*sc],b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ ctx.fillStyle=&#x27;rgba(127,119,221,.07)&#x27;;ctx.fillRect(...P(-1.4,3.6),4.8*sc,3.6*sc);
+ for(let i=-1;i&lt;=3;i++){ctx.strokeStyle=b;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(...P(i,0));ctx.lineTo(...P(i,3.5));ctx.stroke();ctx.fillStyle=m;ctx.font=&#x27;11px sans-serif&#x27;;ctx.fillText(i,P(i,0)[0]-3,P(i,0)[1]+14)}
+ for(let j=1;j&lt;=3;j++){ctx.strokeStyle=b;ctx.beginPath();ctx.moveTo(...P(-1.3,j));ctx.lineTo(...P(3.3,j));ctx.stroke();ctx.fillStyle=m;ctx.fillText(j,P(-1.3,j)[0]-12,P(-1.3,j)[1]+4)}
+ ctx.strokeStyle=m;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(...P(-1.4,0));ctx.lineTo(...P(3.4,0));ctx.stroke();
+ ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;地面&#x27;,P(-1.35,0)[0],P(-1.35,0)[1]-6);ctx.fillText(&#x27;往前多远 r →&#x27;,P(2.2,0)[0],P(2.2,0)[1]+28);ctx.fillText(&#x27;多高 z ↑&#x27;,P(-1.35,3.4)[0],P(-1.35,3.4)[1]);
+ ctx.lineCap=&#x27;round&#x27;;ctx.strokeStyle=&#x27;rgba(136,135,128,.6)&#x27;;ctx.lineWidth=14;ctx.beginPath();ctx.moveTo(...P(0,0));ctx.lineTo(...P(0,H0));ctx.stroke();
+ const s=state(k,prog);ctx.lineWidth=10;ctx.strokeStyle=&#x27;rgba(136,135,128,.5)&#x27;;ctx.beginPath();s.path.forEach((q,i)=&gt;i?ctx.lineTo(...P(...q)):ctx.moveTo(...P(...q)));ctx.lineTo(...P(s.x,s.y));ctx.stroke();ctx.lineCap=&#x27;butt&#x27;;
+ ctx.fillStyle=pri;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;底座&#x27;,P(0,0)[0]+10,P(0,0.4)[1]);ctx.fillText(&#x27;肩膀 (0, 1)&#x27;,P(0,H0)[0]-78,P(0,H0)[1]+4);
+ s.path.forEach(q=&gt;{ctx.fillStyle=pri;ctx.beginPath();ctx.arc(...P(...q),3.5,0,7);ctx.fill()});
+ const o=P(s.x,s.y);ctx.save();ctx.translate(...o);ctx.rotate(-s.h*D);ctx.fillStyle=&#x27;#1D9E75&#x27;;ctx.beginPath();ctx.ellipse(0,0,12,8,0,0,7);ctx.fill();ctx.beginPath();ctx.arc(13,0,4,0,7);ctx.fill();
+ ctx.strokeStyle=&#x27;#D85A30&#x27;;ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(40,0);ctx.stroke();ctx.beginPath();ctx.moveTo(44,0);ctx.lineTo(36,-5);ctx.lineTo(36,5);ctx.fill();ctx.restore();
+ if(k===4&amp;&amp;prog&gt;=1){ctx.strokeStyle=m;ctx.setLineDash([3,3]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(...P(s.x,s.y));ctx.lineTo(...P(s.x,0));ctx.moveTo(...P(s.x,s.y));ctx.lineTo(...P(0,s.y));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=pri;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(`末端 (r, z) = (${f(s.x)}, ${f(s.y)})`,o[0]+10,o[1]-14)}
+ panel()}
+function panel(){const t2=+$(&#x27;t2&#x27;).value,t3=+$(&#x27;t3&#x27;).value,a=t2*D,bb=(t2+t3)*D;$(&#x27;cnt&#x27;).textContent=`动作 ${k} / 4`;
+ const w1r=A2*Math.cos(a),w1z=A2*Math.sin(a),w2r=A3*Math.cos(bb),w2z=A3*Math.sin(bb);let h=&#x27;&#x27;;
+ if(k===0)h=&#x27;乌龟站在&lt;b&gt;肩膀&lt;/b&gt;上，位置 (r, z) = (0, 1)：往前 0，高 1。&lt;br&gt;一开始面朝&lt;b&gt;正前方&lt;/b&gt;（水平）。&#x27;;
+ if(k===1)h=`转 θ₂ = ${t2}°。&lt;br&gt;现在面朝的角度：&lt;b&gt;${t2}°&lt;/b&gt;（从水平方向量起）。`;
+ if(k&gt;=2)h=`&lt;div style=&quot;font-weight:500&quot;&gt;走大臂 1.5（面朝 ${t2}°）&lt;/div&gt;&lt;div class=&quot;cal&quot;&gt;往前多了 1.5 × cos ${t2}° = ${f(w1r)}
+往上多了 1.5 × sin ${t2}° = ${f(w1z)}
+到达 (${f(w1r)}, ${f(1+w1z)})  ← 手肘&lt;/div&gt;`;
+ if(k&gt;=3)h+=`&lt;div style=&quot;font-weight:500;margin-top:6px&quot;&gt;再转 θ₃ = ${t3}°&lt;/div&gt;&lt;div style=&quot;font-size:13px;color:var(--text-secondary)&quot;&gt;现在面朝 ${t2}° + (${t3}°) = &lt;b&gt;${t2+t3}°&lt;/b&gt;（两次转的角度加起来）&lt;/div&gt;`;
+ if(k&gt;=4)h+=`&lt;div style=&quot;font-weight:500;margin-top:6px&quot;&gt;走小臂 1.2（面朝 ${t2+t3}°）&lt;/div&gt;&lt;div class=&quot;cal&quot;&gt;往前多了 1.2 × cos ${t2+t3}° = ${f(w2r)}
+往上多了 1.2 × sin ${t2+t3}° = ${f(w2z)}
+
+r = 0 + ${fp(w1r)} + ${fp(w2r)} = &lt;b&gt;${f(w1r+w2r)}&lt;/b&gt;
+z = 1 + ${fp(w1z)} + ${fp(w2z)} = &lt;b&gt;${f(1+w1z+w2z)}&lt;/b&gt;&lt;/div&gt;`;
+ $(&#x27;panel&#x27;).innerHTML=h}
+function goTo(n){clearInterval(anim);k=Math.max(0,Math.min(4,n));prog=0;anim=setInterval(()=&gt;{prog=Math.min(1,prog+0.03);draw();if(prog&gt;=1)clearInterval(anim)},16)}
+$(&#x27;go&#x27;).onclick=()=&gt;goTo(k+1);$(&#x27;back&#x27;).onclick=()=&gt;{clearInterval(anim);k=Math.max(0,k-1);prog=1;draw()};$(&#x27;reset&#x27;).onclick=()=&gt;{clearInterval(anim);k=0;prog=1;draw()};
+[&#x27;t2&#x27;,&#x27;t3&#x27;].forEach(id=&gt;$(id).oninput=()=&gt;{$(id+&#x27;O&#x27;).textContent=$(id).value+&#x27;°&#x27;;clearInterval(anim);k=0;prog=1;draw()});
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=2;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<div class="key">只用一条规则（单位圆学过）：<b>面朝角度 φ 走 L 步，往前走了 L × cos φ，往上走了 L × sin φ。</b><br>第二段走的方向是 <b>θ₂ + θ₃</b>，因为乌龟转了两次，角度要加起来。</div>
+<pre>例子：θ₂ = 90°，θ₃ = −90°
+
+起点：肩膀 (0, 1)
+
+走大臂：面朝 90°（朝正上方），走 1.5
+  往前 1.5 × cos 90° = 1.5 × 0 = 0
+  往上 1.5 × sin 90° = 1.5 × 1 = 1.5
+  到达手肘 (0, 2.5)
+
+再转 −90°：面朝 90° + (−90°) = 0°（朝正前方）
+
+走小臂：面朝 0°，走 1.2
+  往前 1.2 × cos 0° = 1.2 × 1 = 1.2
+  往上 1.2 × sin 0° = 1.2 × 0 = 0
+
+末端：r = 0 + 0 + 1.2 = 1.2
+      z = 1 + 1.5 + 0 = 2.5</pre>
+<p><b>这一步的作用：</b>3D 末端要 3 个数 (x, y, z)。这一步算出了 <b>z</b>（已经是最终答案）和 <b>r</b>（还要拆成 x、y）。和之前平面手臂的区别只有两个：起点在肩膀 (0, 1)，不在 (0, 0)；横轴叫 r，竖轴叫 z。</p>
+
+<h2>4. 底座转身：什么变了，什么没变</h2>
+<div class="card"><iframe id="f3" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div style=&quot;display:flex;align-items:center;gap:10px;margin:0 0 10px&quot;&gt;
+  &lt;label style=&quot;font-size:13px;color:var(--text-secondary);min-width:86px&quot;&gt;θ₁ 底座转身&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;t1&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;5&quot; value=&quot;0&quot; style=&quot;flex:1&quot;&gt;
+  &lt;span id=&quot;t1O&quot; style=&quot;font-size:13px;font-weight:500;min-width:44px;text-align:right&quot;&gt;0°&lt;/span&gt;
+  &lt;button id=&quot;play&quot;&gt;播放&lt;/button&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:center&quot;&gt;
+  &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:330px;cursor:grab;touch-action:none&quot;&gt;&lt;/canvas&gt;
+  &lt;div style=&quot;font-size:14px;line-height:1.9&quot;&gt;
+    &lt;div style=&quot;background:var(--surface-1);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px&quot;&gt;
+      &lt;div style=&quot;color:var(--text-secondary);font-size:13px&quot;&gt;高度 z&lt;/div&gt;&lt;div style=&quot;font-size:22px;font-weight:500&quot;&gt;2.50&lt;/div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-success)&quot;&gt;不变&lt;/div&gt;&lt;/div&gt;
+    &lt;div style=&quot;background:var(--surface-1);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px&quot;&gt;
+      &lt;div style=&quot;color:var(--text-secondary);font-size:13px&quot;&gt;往前多远 r&lt;/div&gt;&lt;div style=&quot;font-size:22px;font-weight:500;color:#BA7517&quot;&gt;1.20&lt;/div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-success)&quot;&gt;不变&lt;/div&gt;&lt;/div&gt;
+    &lt;div style=&quot;background:var(--surface-1);border-radius:var(--radius);padding:10px 12px&quot;&gt;
+      &lt;div style=&quot;color:var(--text-secondary);font-size:13px&quot;&gt;&quot;往前&quot;朝哪个方向&lt;/div&gt;&lt;div id=&quot;dir&quot; style=&quot;font-size:22px;font-weight:500&quot;&gt;0°&lt;/div&gt;&lt;div style=&quot;font-size:12px;color:var(--text-danger)&quot;&gt;跟着 θ₁ 变&lt;/div&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div style=&quot;font-size:12px;color:var(--text-muted);margin-top:4px&quot;&gt;肩膀、手肘固定在 θ₂ = 90°、θ₃ = −90°。琥珀色线 = 地面上&quot;往前多远&quot;r。可拖动画面换视角。&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+let yaw=-0.9,pitch=0.45,playing=false;
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t1=+$(&#x27;t1&#x27;).value*D,u=[Math.cos(t1),Math.sin(t1)],to3=(r,z)=&gt;[r*u[0],r*u[1],z];
+ const s=Math.min(W,H)*0.17,P=p=&gt;{const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp;return[W*0.5+X*s,H*0.78-Y*s]};
+ const ln=(a,b,c,w,dd)=&gt;{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(dd||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])};
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let i=-3;i&lt;=3;i++){ln(P([i,-3,0]),P([i,3,0]),b,0.5);ln(P([-3,i,0]),P([3,i,0]),b,0.5)}
+ ln(P([0,0,0]),P([3,0,0]),m,1,[4,3]);ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;const xp=P([3.1,0,0]);ctx.fillText(&#x27;θ₁ = 0° 时的&quot;往前&quot;&#x27;,xp[0]-10,xp[1]+16);
+ const q=[to3(-0.6,0),to3(2.6,0),to3(2.6,3.2),to3(-0.6,3.2)].map(P);ctx.fillStyle=&#x27;rgba(127,119,221,.12)&#x27;;ctx.strokeStyle=&#x27;rgba(127,119,221,.55)&#x27;;ctx.lineWidth=1;ctx.beginPath();q.forEach((p,i)=&gt;i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fill();ctx.stroke();
+ const S=[0,0,1],E=to3(0,2.5),T=to3(1.2,2.5),F=to3(1.2,0);
+ ln(P([0,0,0]),P(F),&#x27;#EF9F27&#x27;,3);ln(P(T),P(F),m,1,[3,3]);
+ if(Math.abs(t1)&gt;0.05){ctx.strokeStyle=&#x27;#EF9F27&#x27;;ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i&lt;=24;i++){const a=t1*i/24,p=P([0.8*Math.cos(a),0.8*Math.sin(a),0]);i?ctx.lineTo(...p):ctx.moveTo(...p)}ctx.stroke();const lp=P([1*Math.cos(t1/2),1*Math.sin(t1/2),0]);ctx.fillStyle=&#x27;#BA7517&#x27;;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(&#x27;θ₁&#x27;,lp[0],lp[1])}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);const bp=P([0,0,0]);ctx.fillRect(bp[0]-22,bp[1]-4,44,9);
+ ctx.lineCap=&#x27;round&#x27;;ln(P([0,0,0]),P(S),&#x27;rgba(136,135,128,.6)&#x27;,16);ln(P(S),P(E),&#x27;rgba(136,135,128,.6)&#x27;,12);ln(P(E),P(T),&#x27;rgba(136,135,128,.6)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ const tp=P(T);ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(tp[0],tp[1],6,0,7);ctx.fill();ctx.fillStyle=pri;ctx.font=&#x27;500 12px sans-serif&#x27;;ctx.fillText(&#x27;末端&#x27;,tp[0]+8,tp[1]-6);
+ const fp2=P(F);ctx.fillStyle=&#x27;#BA7517&#x27;;ctx.fillText(&#x27;r = 1.2&#x27;,(bp[0]+fp2[0])/2+4,(bp[1]+fp2[1])/2+14);ctx.fillStyle=m;ctx.fillText(&#x27;z = 2.5&#x27;,(tp[0]+fp2[0])/2+6,(tp[1]+fp2[1])/2);
+ $(&#x27;dir&#x27;).textContent=$(&#x27;t1&#x27;).value+&#x27;°&#x27;}
+function loop(){if(!playing)return;let v=+$(&#x27;t1&#x27;).value+1;if(v&gt;180)v=-180;$(&#x27;t1&#x27;).value=v;$(&#x27;t1O&#x27;).textContent=v+&#x27;°&#x27;;draw();requestAnimationFrame(loop)}
+$(&#x27;t1&#x27;).oninput=()=&gt;{$(&#x27;t1O&#x27;).textContent=$(&#x27;t1&#x27;).value+&#x27;°&#x27;;draw()};
+$(&#x27;play&#x27;).onclick=()=&gt;{playing=!playing;$(&#x27;play&#x27;).textContent=playing?&#x27;暂停&#x27;:&#x27;播放&#x27;;if(playing)loop()};
+let drag=null;cv.onpointerdown=e=&gt;{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=&gt;{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(-0.2,Math.min(1.4,pitch+(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()};
+cv.onpointerup=()=&gt;drag=null;window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=3;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<p><b>底座转身时，z 和 r 都不变，只有"往前"的方向变了，转到了 θ₁ 的方向。</b>就像坐在转椅上、手平伸在前面：椅子一转，手的高度不变，手离身体的距离也不变，只是手指的方向变了。</p>
+
+<h2>5. 从天花板往下看：把 r 拆成 x、y</h2>
+<p>从正上方往下看，高度 z 看不见了。末端在地面上的影子，就是一根从底座出发、长 r、朝 θ₁ 方向的线。</p>
+<div class="card"><iframe id="f4" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;.cal{font-family:var(--font-mono);font-size:14px;line-height:1.9;white-space:pre}&lt;/style&gt;
+&lt;div style=&quot;display:flex;gap:16px;flex-wrap:wrap;margin:0 0 10px&quot;&gt;
+  &lt;div style=&quot;display:flex;align-items:center;gap:8px;flex:1;min-width:230px&quot;&gt;&lt;label style=&quot;font-size:13px;color:var(--text-secondary);min-width:80px&quot;&gt;θ₁ 底座转身&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;t1&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;15&quot; value=&quot;30&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;t1O&quot; style=&quot;font-size:13px;font-weight:500;min-width:40px&quot;&gt;30°&lt;/span&gt;&lt;/div&gt;
+  &lt;div style=&quot;display:flex;align-items:center;gap:8px;flex:1;min-width:230px&quot;&gt;&lt;label style=&quot;font-size:13px;color:var(--text-secondary);min-width:80px&quot;&gt;r 往前多远&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;r&quot; min=&quot;0.4&quot; max=&quot;2.8&quot; step=&quot;0.4&quot; value=&quot;1.2&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;rO&quot; style=&quot;font-size:13px;font-weight:500;min-width:40px&quot;&gt;1.2&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;align-items:center&quot;&gt;
+  &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:320px&quot;&gt;&lt;/canvas&gt;
+  &lt;div id=&quot;panel&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const f=v=&gt;{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const fp=v=&gt;{const s=f(v);return v&lt;-0.004?&#x27;(&#x27;+s+&#x27;)&#x27;:s};
+function ar(a,b,c,w){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const t=+$(&#x27;t1&#x27;).value*D,r=+$(&#x27;r&#x27;).value,c=Math.cos(t),s=Math.sin(t),sc=Math.min(W,H)/6.6,O=[W/2,H/2],P=(x,y)=&gt;[O[0]+x*sc,O[1]-y*sc],b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let i=-3;i&lt;=3;i++){ctx.strokeStyle=b;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(...P(i,-3));ctx.lineTo(...P(i,3));ctx.stroke();ctx.beginPath();ctx.moveTo(...P(-3,i));ctx.lineTo(...P(3,i));ctx.stroke();if(i){ctx.fillStyle=m;ctx.font=&#x27;11px sans-serif&#x27;;ctx.fillText(i,P(i,0)[0]-3,P(i,0)[1]+14);ctx.fillText(i,P(0,i)[0]+5,P(0,i)[1]+4)}}
+ ar(P(-3.1,0),P(3.2,0),m,1);ar(P(0,-3.1),P(0,3.2),m,1);ctx.fillStyle=m;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(&#x27;x&#x27;,P(3.2,0)[0]-4,P(3.2,0)[1]+16);ctx.fillText(&#x27;y&#x27;,P(0,3.2)[0]+8,P(0,3.2)[1]+6);
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);ctx.beginPath();ctx.arc(...P(0,0),9,0,7);ctx.fill();ctx.fillStyle=pri;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;底座（从上往下看）&#x27;,P(0,0)[0]-118,P(0,0)[1]+24);
+ const X=r*c,Y=r*s;
+ ctx.lineWidth=4;ctx.strokeStyle=&#x27;rgba(216,90,48,.7)&#x27;;ctx.beginPath();ctx.moveTo(...P(0,0));ctx.lineTo(...P(X,0));ctx.stroke();
+ ctx.strokeStyle=&#x27;rgba(29,158,117,.7)&#x27;;ctx.beginPath();ctx.moveTo(...P(X,0));ctx.lineTo(...P(X,Y));ctx.stroke();
+ ctx.setLineDash([3,3]);ctx.lineWidth=1;ctx.strokeStyle=m;ctx.beginPath();ctx.moveTo(...P(X,Y));ctx.lineTo(...P(0,Y));ctx.stroke();ctx.setLineDash([]);
+ ar(P(0,0),P(X*0.97,Y*0.97),&#x27;#EF9F27&#x27;,3);
+ ctx.strokeStyle=&#x27;#EF9F27&#x27;;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(...P(0,0),sc*0.5,0,-t,t&gt;0);ctx.stroke();ctx.fillStyle=&#x27;#BA7517&#x27;;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(&#x27;θ₁&#x27;,P(0.65*Math.cos(t/2),0.65*Math.sin(t/2))[0],P(0.65*Math.cos(t/2),0.65*Math.sin(t/2))[1]+4);
+ ctx.fillText(&#x27;r&#x27;,P(X/2-0.25*s,Y/2+0.25*c)[0],P(X/2-0.25*s,Y/2+0.25*c)[1]);
+ ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(...P(X,Y),6,0,7);ctx.fill();ctx.fillStyle=pri;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(`(${f(X)}, ${f(Y)})`,P(X,Y)[0]+10,P(X,Y)[1]-8);
+ ctx.fillStyle=&#x27;#993C1D&#x27;;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;x = &#x27;+f(X),P(X/2,0)[0]-16,P(X/2,0)[1]+(Y&gt;=0?18:-8));ctx.fillStyle=&#x27;#0F6E56&#x27;;ctx.fillText(&#x27;y = &#x27;+f(Y),P(X,Y/2)[0]+(X&gt;=0?8:-56),P(X,Y/2)[1]+4);
+ $(&#x27;panel&#x27;).innerHTML=`&lt;div style=&quot;font-size:14px;color:var(--text-secondary);line-height:1.8;margin-bottom:6px&quot;&gt;一根长 r、朝 θ₁ 方向的线：&lt;/div&gt;&lt;div class=&quot;cal&quot;&gt;&lt;span style=&quot;color:#993C1D&quot;&gt;x = r × cos θ₁&lt;/span&gt;
+  = ${f(r)} × cos ${$(&#x27;t1&#x27;).value}°
+  = ${f(r)} × ${fp(c)}
+  = &lt;b&gt;${f(X)}&lt;/b&gt;
+
+&lt;span style=&quot;color:#0F6E56&quot;&gt;y = r × sin θ₁&lt;/span&gt;
+  = ${f(r)} × sin ${$(&#x27;t1&#x27;).value}°
+  = ${f(r)} × ${fp(s)}
+  = &lt;b&gt;${f(Y)}&lt;/b&gt;&lt;/div&gt;`}
+[&#x27;t1&#x27;,&#x27;r&#x27;].forEach(id=&gt;$(id).oninput=()=&gt;{$(id+&#x27;O&#x27;).textContent=$(id).value+(id===&#x27;t1&#x27;?&#x27;°&#x27;:&#x27;&#x27;);draw()});
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=4;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<pre>一根长 r、朝 θ₁ 方向的线：
+x = r × cos θ₁
+y = r × sin θ₁
+
+r = 1.2 的例子：
+θ₁ = 0°：  x = 1.2 × cos 0°  = 1.2 × 1 = 1.2
+           y = 1.2 × sin 0°  = 1.2 × 0 = 0
+θ₁ = 90°： x = 1.2 × cos 90° = 1.2 × 0 = 0
+           y = 1.2 × sin 90° = 1.2 × 1 = 1.2</pre>
+
+<h2>6. 合起来：三个角各管一件事</h2>
+<pre>θ₂、θ₃（大臂、小臂）→ 决定 r（往前多远）和 z（多高）     ← 在墙里算
+θ₁（底座）          → 决定"往前"朝哪个方向，把 r 分成 x 和 y，不碰 z
+
+x = r × cos θ₁
+y = r × sin θ₁
+z 不变</pre>
+<div class="key"><b>常见误解：</b>"θ₁ 影响 x、y，θ₂、θ₃ 只影响 z"——只对一半。θ₂、θ₃ 也决定 r，而 r 会进到 x、y 的计算里，所以它们也会间接影响 x、y。例如 θ₁ = 0° 不转身，只把大臂从竖直放平，末端往前伸出去，x 就变大了。准确地说：<b>θ₁ 只影响 x、y，不影响 z；θ₂、θ₃ 决定 r 和 z。</b></div>
+
+<h2>练习题</h2>
+<h3>综合题（分步引导）</h3>
+<div class="card"><iframe id="f5" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:56px;height:34px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.lb{font-size:13px;color:var(--text-secondary);margin:10px 0 4px;line-height:1.6}
+.row{display:flex;align-items:center;gap:4px;font-size:16px}
+.sec{font-size:14px;font-weight:500;margin:14px 0 2px}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.8;white-space:pre}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:6px&quot;&gt;肩膀离地高 &lt;b&gt;1&lt;/b&gt;，大臂长 &lt;b&gt;1.5&lt;/b&gt;，小臂长 &lt;b&gt;1.2&lt;/b&gt;。三个关节：θ₁ = &lt;b&gt;90°&lt;/b&gt;（底座），θ₂ = &lt;b&gt;0°&lt;/b&gt;（肩膀），θ₃ = &lt;b&gt;90°&lt;/b&gt;（手肘）。求末端在世界里的位置 (x, y, z)。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:330px;cursor:grab;touch-action:none&quot;&gt;&lt;/canvas&gt;&lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted)&quot;&gt;提交答案后机械臂会动起来&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;sec&quot; style=&quot;margin-top:0&quot;&gt;A. 在墙里算（乌龟从肩膀 (0, 1) 出发、面朝 0°）&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;① 转 θ₂ = 0°，走大臂 1.5，到达手肘 (r, z)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;er&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;ez&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;② 再转 θ₃ = 90°，现在面朝多少度？&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;input class=&quot;in&quot; id=&quot;ph&quot;&gt; °&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;③ 走小臂 1.2，末端在墙里的 (r, z)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;r&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;z&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;sec&quot;&gt;B. 转身（从天花板往下看）&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;④ x = r × cos θ₁，y = r × sin θ₁&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;x = &lt;input class=&quot;in&quot; id=&quot;x&quot;&gt;，y = &lt;input class=&quot;in&quot; id=&quot;y&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;sec&quot;&gt;C. 答案&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;⑤ 末端 (x, y, z)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;fx&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;fy&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;fz&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const CFG={&quot;t1&quot;: 90, &quot;t2&quot;: 0, &quot;t3&quot;: 90, &quot;lab&quot;: &quot;末端 (0, 1.5, 2.2)&quot;, &quot;lock&quot;: &quot;先弯手肘（90°），再转底座（90°）&quot;, &quot;KEY&quot;: {&quot;er&quot;: 1.5, &quot;ez&quot;: 1, &quot;ph&quot;: 90, &quot;r&quot;: 1.5, &quot;z&quot;: 2.2, &quot;x&quot;: 0, &quot;y&quot;: 1.5, &quot;fx&quot;: 0, &quot;fy&quot;: 1.5, &quot;fz&quot;: 2.2}, &quot;G&quot;: {&quot;er&quot;: &quot;①&quot;, &quot;ez&quot;: &quot;①&quot;, &quot;ph&quot;: &quot;②&quot;, &quot;r&quot;: &quot;③&quot;, &quot;z&quot;: &quot;③&quot;, &quot;x&quot;: &quot;④&quot;, &quot;y&quot;: &quot;④&quot;, &quot;fx&quot;: &quot;⑤&quot;, &quot;fy&quot;: &quot;⑤&quot;, &quot;fz&quot;: &quot;⑤&quot;}, &quot;hints&quot;: [&quot;① 面朝 0°（水平往前）走 1.5：往前 1.5 × cos 0° = 1.5，往上 1.5 × sin 0° = 0。起点是肩膀 (0, 1)。&quot;, &quot;② 两次转的角度加起来：0° + 90°。&quot;, &quot;③ 面朝 90°（竖直往上）走 1.2：往前 1.2 × cos 90° = 0，往上 1.2 × sin 90° = 1.2。在手肘的位置上加。&quot;, &quot;④ 转身转的是 θ₁ = 90°：cos 90° = 0，sin 90° = 1，r 用 ③ 的结果。&quot;, &quot;⑤ x、y 来自 ④，z 来自 ③（转身时 z 不变）。&quot;], &quot;sol&quot;: &quot;A. 在墙里算（起点肩膀 (0, 1)，面朝 0°）\n\n① 转 θ₂ = 0°，面朝 0°，走 1.5：\n   往前 1.5 × cos 0° = 1.5 × 1 = 1.5\n   往上 1.5 × sin 0° = 1.5 × 0 = 0\n   手肘 = (0 + 1.5, 1 + 0) = (1.5, 1)\n\n② 再转 θ₃ = 90°：面朝 0° + 90° = 90°（竖直往上）\n\n③ 面朝 90°，走 1.2：\n   往前 1.2 × cos 90° = 1.2 × 0 = 0\n   往上 1.2 × sin 90° = 1.2 × 1 = 1.2\n   末端在墙里 = (1.5 + 0, 1 + 1.2) = (1.5, 2.2)  → r = 1.5，z = 2.2\n\nB. 转身（θ₁ = 90°）\n\n④ x = 1.5 × cos 90° = 1.5 × 0 = 0\n   y = 1.5 × sin 90° = 1.5 × 1 = 1.5\n\nC. 末端 = (0, 1.5, 2.2)&quot;, &quot;note&quot;: &quot;直观检查：大臂水平往前伸 1.5，小臂竖直往上伸 1.2，所以末端离底座水平 1.5、高 1 + 1.2 = 2.2。底座转了 90°，\&quot;往前\&quot;从 x 方向变成了 y 方向，所以 1.5 全给了 y。&quot;};
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+let done=false,hints=0,k=0,anim=null,yaw=-0.9,pitch=0.4;
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const f=done?Math.min(1,k):0,a=Math.min(1,f*1.5),bq=Math.max(0,f*3-2),t2=CFG.t2*D*a,t3=CFG.t3*D*a,t1=CFG.t1*D*bq;
+ const u=[Math.cos(t1),Math.sin(t1)],to3=(r,z)=&gt;[r*u[0],r*u[1],z];
+ const s=Math.min(W,H)*0.17,P=p=&gt;{const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp;return[W*0.5+X*s,H*0.8-Y*s]};
+ const ln=(a,b,c,w,dd)=&gt;{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(dd||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])};
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let i=-3;i&lt;=3;i++){ln(P([i,-3,0]),P([i,3,0]),b,0.5);ln(P([-3,i,0]),P([3,i,0]),b,0.5)}
+ [[&#x27;x&#x27;,[3,0,0]],[&#x27;y&#x27;,[0,3,0]],[&#x27;z&#x27;,[0,0,3.2]]].forEach(([n,v])=&gt;{ln(P([0,0,0]),P(v),m,1);ctx.fillStyle=m;ctx.font=&#x27;500 13px sans-serif&#x27;;const q=P(v);ctx.fillText(n,q[0]+4,q[1]-2)});
+ const rE=1.5*Math.cos(t2),zE=1+1.5*Math.sin(t2),r=rE+1.2*Math.cos(t2+t3),z=zE+1.2*Math.sin(t2+t3);
+ const S=[0,0,1],E=to3(rE,zE),T=to3(r,z);
+ if(done){ln(P([0,0,0]),P([T[0],T[1],0]),&#x27;#EF9F27&#x27;,3);ln(P(T),P([T[0],T[1],0]),m,1,[3,3])}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);const bp=P([0,0,0]);ctx.fillRect(bp[0]-22,bp[1]-4,44,9);
+ ctx.lineCap=&#x27;round&#x27;;ln(P([0,0,0]),P(S),&#x27;rgba(136,135,128,.6)&#x27;,16);ln(P(S),P(E),&#x27;rgba(136,135,128,.6)&#x27;,12);ln(P(E),P(T),&#x27;rgba(136,135,128,.6)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ const tp=P(T);ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(tp[0],tp[1],6,0,7);ctx.fill();
+ if(done&amp;&amp;f&gt;=1){ctx.fillStyle=pri;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(CFG.lab,tp[0]+10,tp[1]-8)}
+ if(!done){ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;（所有关节都还是 0°）&#x27;,W*0.55,30)}}
+const IDS=Object.keys(CFG.KEY);IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;CFG.hints.length){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+CFG.hints[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals={};IDS.forEach(id=&gt;vals[id]=$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(IDS.some(id=&gt;vals[id]===&#x27;&#x27;||isNaN(+vals[id]))){$(&#x27;err&#x27;).textContent=&#x27;所有格子都要填数字&#x27;;return}
+ done=true;const wr={};IDS.forEach(id=&gt;{const ok=Math.abs(+vals[id]-CFG.KEY[id])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok)wr[CFG.G[id]]=1});
+ $(&#x27;lock&#x27;).textContent=CFG.lock;k=0;anim=setInterval(()=&gt;{k=Math.min(1,k+0.008);draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=Object.keys(wr);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad.length?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad.length?`${bad.join(&#x27;、&#x27;)} 有错，看看完整解析：`:&#x27;全对！&#x27;}&lt;/div&gt;&lt;div class=&quot;mono&quot;&gt;${CFG.sol}&lt;/div&gt;&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${CFG.note}&lt;/div&gt;`};
+let drag=null;cv.onpointerdown=e=&gt;{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=&gt;{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(-0.2,Math.min(1.4,pitch+(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()};
+cv.onpointerup=()=&gt;drag=null;window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=5;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>巩固题（不给分步引导）</h3>
+<div class="card"><iframe id="f6" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.in{width:56px;height:34px;font-family:var(--font-mono);font-size:14px;text-align:center}
+.in.ok{border-color:var(--border-success);background:var(--bg-success);color:var(--text-success)}
+.in.bad{border-color:var(--border-danger);background:var(--bg-danger);color:var(--text-danger)}
+.lb{font-size:13px;color:var(--text-secondary);margin:10px 0 4px;line-height:1.6}
+.row{display:flex;align-items:center;gap:4px;font-size:16px}
+.sec{font-size:14px;font-weight:500;margin:14px 0 2px}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:1.8;white-space:pre}
+&lt;/style&gt;
+&lt;div style=&quot;font-size:15px;line-height:1.7;margin-bottom:6px&quot;&gt;肩膀离地高 &lt;b&gt;1&lt;/b&gt;，大臂长 &lt;b&gt;1.5&lt;/b&gt;，小臂长 &lt;b&gt;1.2&lt;/b&gt;。三个关节：θ₁ = &lt;b&gt;180°&lt;/b&gt;（底座），θ₂ = &lt;b&gt;90°&lt;/b&gt;（肩膀），θ₃ = &lt;b&gt;−90°&lt;/b&gt;（手肘）。求末端在世界里的位置。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start&quot;&gt;
+  &lt;div&gt;&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:330px;cursor:grab;touch-action:none&quot;&gt;&lt;/canvas&gt;&lt;div id=&quot;lock&quot; style=&quot;font-size:12px;color:var(--text-muted)&quot;&gt;提交答案后机械臂会动起来&lt;/div&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot;&gt;末端在墙里的 (r, z)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;r&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;z&quot;&gt;)&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;转身后的 x、y&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;x = &lt;input class=&quot;in&quot; id=&quot;x&quot;&gt;，y = &lt;input class=&quot;in&quot; id=&quot;y&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;lb&quot;&gt;末端 (x, y, z)&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;(&lt;input class=&quot;in&quot; id=&quot;fx&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;fy&quot;&gt;,&lt;input class=&quot;in&quot; id=&quot;fz&quot;&gt;)&lt;/div&gt;
+    &lt;button id=&quot;hint&quot; style=&quot;width:100%;margin-top:12px&quot;&gt;给我一点提示&lt;/button&gt;
+    &lt;div id=&quot;hintT&quot; style=&quot;font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.6&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;submit&quot; style=&quot;width:100%;margin-top:8px&quot;&gt;提交答案&lt;/button&gt;
+    &lt;div id=&quot;err&quot; style=&quot;font-size:13px;color:var(--text-danger);margin-top:6px&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;fb&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const CFG={&quot;t1&quot;: 180, &quot;t2&quot;: 90, &quot;t3&quot;: -90, &quot;lab&quot;: &quot;末端 (−1.2, 0, 2.5)&quot;, &quot;lock&quot;: &quot;先抬肩膀、弯手肘，再转底座 180°&quot;, &quot;KEY&quot;: {&quot;r&quot;: 1.2, &quot;z&quot;: 2.5, &quot;x&quot;: -1.2, &quot;y&quot;: 0, &quot;fx&quot;: -1.2, &quot;fy&quot;: 0, &quot;fz&quot;: 2.5}, &quot;G&quot;: {&quot;r&quot;: &quot;墙里 (r, z)&quot;, &quot;z&quot;: &quot;墙里 (r, z)&quot;, &quot;x&quot;: &quot;转身 x、y&quot;, &quot;y&quot;: &quot;转身 x、y&quot;, &quot;fx&quot;: &quot;末端&quot;, &quot;fy&quot;: &quot;末端&quot;, &quot;fz&quot;: &quot;末端&quot;}, &quot;hints&quot;: [&quot;先在墙里：乌龟从肩膀 (0, 1) 出发、面朝 0°。转 θ₂ 走 1.5，再转 θ₃ 走 1.2。&quot;, &quot;θ₂ = 90° 时大臂竖直朝上；再转 −90° 后面朝 0°，小臂水平往前。&quot;, &quot;转身：cos 180° = −1，sin 180° = 0。z 不变。&quot;], &quot;sol&quot;: &quot;在墙里（起点肩膀 (0, 1)，面朝 0°）\n  转 θ₂ = 90°，面朝 90°，走 1.5：\n    往前 1.5 × cos 90° = 0，往上 1.5 × sin 90° = 1.5    → 手肘 (0, 2.5)\n  再转 θ₃ = −90°，面朝 90° + (−90°) = 0°，走 1.2：\n    往前 1.2 × cos 0° = 1.2，往上 1.2 × sin 0° = 0      → 末端 (1.2, 2.5)\n  r = 1.2，z = 2.5\n\n转身（θ₁ = 180°）\n  x = 1.2 × cos 180° = 1.2 × (−1) = −1.2\n  y = 1.2 × sin 180° = 1.2 × 0    = 0\n\n末端 = (−1.2, 0, 2.5)&quot;, &quot;note&quot;: &quot;直观检查：大臂竖直、小臂水平往前，所以 r = 1.2、z = 2.5。底座掉头 180°，\&quot;往前\&quot;变成了 x 的反方向，所以 x = −1.2。θ₁ 只改变 x、y，z 一直是 2.5。&quot;};
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+let done=false,hints=0,k=0,anim=null,yaw=-0.9,pitch=0.4;
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const f=done?Math.min(1,k):0,a=Math.min(1,f*1.5),bq=Math.max(0,f*3-2),t2=CFG.t2*D*a,t3=CFG.t3*D*a,t1=CFG.t1*D*bq;
+ const u=[Math.cos(t1),Math.sin(t1)],to3=(r,z)=&gt;[r*u[0],r*u[1],z];
+ const s=Math.min(W,H)*0.17,P=p=&gt;{const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp;return[W*0.5+X*s,H*0.8-Y*s]};
+ const ln=(a,b,c,w,dd)=&gt;{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(dd||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])};
+ const b=css(&#x27;--border&#x27;),m=css(&#x27;--text-muted&#x27;),pri=css(&#x27;--text-primary&#x27;);
+ for(let i=-3;i&lt;=3;i++){ln(P([i,-3,0]),P([i,3,0]),b,0.5);ln(P([-3,i,0]),P([3,i,0]),b,0.5)}
+ [[&#x27;x&#x27;,[3,0,0]],[&#x27;y&#x27;,[0,3,0]],[&#x27;z&#x27;,[0,0,3.2]]].forEach(([n,v])=&gt;{ln(P([0,0,0]),P(v),m,1);ctx.fillStyle=m;ctx.font=&#x27;500 13px sans-serif&#x27;;const q=P(v);ctx.fillText(n,q[0]+4,q[1]-2)});
+ const rE=1.5*Math.cos(t2),zE=1+1.5*Math.sin(t2),r=rE+1.2*Math.cos(t2+t3),z=zE+1.2*Math.sin(t2+t3);
+ const S=[0,0,1],E=to3(rE,zE),T=to3(r,z);
+ if(done){ln(P([0,0,0]),P([T[0],T[1],0]),&#x27;#EF9F27&#x27;,3);ln(P(T),P([T[0],T[1],0]),m,1,[3,3])}
+ ctx.fillStyle=css(&#x27;--text-secondary&#x27;);const bp=P([0,0,0]);ctx.fillRect(bp[0]-22,bp[1]-4,44,9);
+ ctx.lineCap=&#x27;round&#x27;;ln(P([0,0,0]),P(S),&#x27;rgba(136,135,128,.6)&#x27;,16);ln(P(S),P(E),&#x27;rgba(136,135,128,.6)&#x27;,12);ln(P(E),P(T),&#x27;rgba(136,135,128,.6)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ const tp=P(T);ctx.fillStyle=&#x27;#D85A30&#x27;;ctx.beginPath();ctx.arc(tp[0],tp[1],6,0,7);ctx.fill();
+ if(done&amp;&amp;f&gt;=1){ctx.fillStyle=pri;ctx.font=&#x27;500 13px sans-serif&#x27;;ctx.fillText(CFG.lab,tp[0]+10,tp[1]-8)}
+ if(!done){ctx.fillStyle=m;ctx.font=&#x27;12px sans-serif&#x27;;ctx.fillText(&#x27;（所有关节都还是 0°）&#x27;,W*0.55,30)}}
+const IDS=Object.keys(CFG.KEY);IDS.forEach(id=&gt;$(id).oninput=()=&gt;{$(&#x27;err&#x27;).textContent=&#x27;&#x27;});
+$(&#x27;hint&#x27;).onclick=()=&gt;{if(hints&lt;CFG.hints.length){$(&#x27;hintT&#x27;).innerHTML+=(hints?&#x27;&lt;br&gt;&#x27;:&#x27;&#x27;)+&#x27;提示 &#x27;+(hints+1)+&#x27;：&#x27;+CFG.hints[hints];hints++}};
+$(&#x27;submit&#x27;).onclick=()=&gt;{if(done)return;const vals={};IDS.forEach(id=&gt;vals[id]=$(id).value.trim().replace(&#x27;−&#x27;,&#x27;-&#x27;));
+ if(IDS.some(id=&gt;vals[id]===&#x27;&#x27;||isNaN(+vals[id]))){$(&#x27;err&#x27;).textContent=&#x27;所有格子都要填数字&#x27;;return}
+ done=true;const wr={};IDS.forEach(id=&gt;{const ok=Math.abs(+vals[id]-CFG.KEY[id])&lt;1e-6;$(id).classList.add(ok?&#x27;ok&#x27;:&#x27;bad&#x27;);$(id).disabled=true;if(!ok)wr[CFG.G[id]]=1});
+ $(&#x27;lock&#x27;).textContent=CFG.lock;k=0;anim=setInterval(()=&gt;{k=Math.min(1,k+0.008);draw();if(k&gt;=1)clearInterval(anim)},16);
+ const bad=Object.keys(wr);
+ $(&#x27;fb&#x27;).innerHTML=`&lt;div style=&quot;font-weight:500;color:${bad.length?&#x27;var(--text-danger)&#x27;:&#x27;var(--text-success)&#x27;}&quot;&gt;${bad.length?`${bad.join(&#x27;、&#x27;)} 有错，看看完整解析：`:&#x27;全对！&#x27;}&lt;/div&gt;&lt;div class=&quot;mono&quot;&gt;${CFG.sol}&lt;/div&gt;&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${CFG.note}&lt;/div&gt;`};
+let drag=null;cv.onpointerdown=e=&gt;{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=&gt;{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(-0.2,Math.min(1.4,pitch+(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()};
+cv.onpointerup=()=&gt;drag=null;window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=6;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+
+<h2>总览动画：三个视图同时看</h2>
+<p>学完 6 小步再看这个：3D 视图、侧视图（墙里）、俯视图（转身）放在一起，拖三个关节滑块，看计算怎么一起变。</p>
+<div class="card"><iframe id="f7" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.ctl{display:flex;align-items:center;gap:10px;margin:0 0 6px}
+.ctl label{font-size:13px;color:var(--text-secondary);min-width:110px}
+.ctl span{font-size:13px;font-weight:500;min-width:44px;text-align:right}
+.cal{font-family:var(--font-mono);font-size:13px;line-height:1.9;white-space:pre}
+.ttl{font-size:13px;font-weight:500;margin-bottom:2px}
+&lt;/style&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;θ₁ 底座转身&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;t1&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;5&quot; value=&quot;0&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;t1O&quot;&gt;0°&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;θ₂ 肩膀抬起&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;t2&quot; min=&quot;-30&quot; max=&quot;180&quot; step=&quot;5&quot; value=&quot;90&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;t2O&quot;&gt;90°&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;θ₃ 手肘弯曲&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;t3&quot; min=&quot;-150&quot; max=&quot;150&quot; step=&quot;5&quot; value=&quot;-90&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;t3O&quot;&gt;-90°&lt;/span&gt;&lt;/div&gt;
+&lt;canvas id=&quot;c3&quot; style=&quot;width:100%;height:290px;cursor:grab;touch-action:none&quot;&gt;&lt;/canvas&gt;
+&lt;div style=&quot;font-size:12px;color:var(--text-muted);margin-bottom:8px&quot;&gt;3D 视图（可拖动换视角）。虚线框 = 手臂所在的竖直平面；琥珀色线 = 末端到底座的水平距离 r。&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px&quot;&gt;
+  &lt;div&gt;&lt;div class=&quot;ttl&quot;&gt;① 侧视图：站在墙正前方看&lt;/div&gt;&lt;canvas id=&quot;cs&quot; style=&quot;width:100%;height:220px&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;ttl&quot;&gt;② 俯视图：从天花板往下看&lt;/div&gt;&lt;canvas id=&quot;ct&quot; style=&quot;width:100%;height:220px&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;panel&quot; style=&quot;margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const H0=1,A2=1.5,A3=1.2,CT=&#x27;#EF9F27&#x27;,CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;
+let yaw=-0.9,pitch=0.35;
+const f=v=&gt;{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const fp=v=&gt;{const s=f(v);return v&lt;-0.004?&#x27;(&#x27;+s+&#x27;)&#x27;:s};
+function mk(id){const cv=$(id),ctx=cv.getContext(&#x27;2d&#x27;);return{cv,ctx,begin(){const d=window.devicePixelRatio||1;this.W=cv.clientWidth;this.H=cv.clientHeight;cv.width=this.W*d;cv.height=this.H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,this.W,this.H)},
+ ln(a,b,c,w,dd){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(dd||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])},
+ ar(a,b,c,w){this.ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-8*Math.cos(an-0.4),b[1]-8*Math.sin(an-0.4));ctx.lineTo(b[0]-8*Math.cos(an+0.4),b[1]-8*Math.sin(an+0.4));ctx.fill()},
+ tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;12px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;},
+ dot(p,c,r){ctx.fillStyle=c;ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill()}}}
+const V3=mk(&#x27;c3&#x27;),VS=mk(&#x27;cs&#x27;),VT=mk(&#x27;ct&#x27;);
+function draw(){const t1=+$(&#x27;t1&#x27;).value*D,t2=+$(&#x27;t2&#x27;).value*D,t3=+$(&#x27;t3&#x27;).value*D;
+ const rE=A2*Math.cos(t2),zE=H0+A2*Math.sin(t2),r=rE+A3*Math.cos(t2+t3),z=zE+A3*Math.sin(t2+t3);
+ const u=[Math.cos(t1),Math.sin(t1)],to3=(rr,zz)=&gt;[rr*u[0],rr*u[1],zz];
+ const pri=css(&#x27;--text-primary&#x27;),m=css(&#x27;--text-muted&#x27;),b=css(&#x27;--border&#x27;),arm=&#x27;rgba(136,135,128,.5)&#x27;;
+ V3.begin();{const s=Math.min(V3.W,V3.H)*0.16,P=p=&gt;{const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const X=p[0]*cy-p[1]*sy,Dd=p[0]*sy+p[1]*cy,Y=p[2]*cp-Dd*sp;return[V3.W*0.5+X*s,V3.H*0.8-Y*s]};
+  for(let i=-3;i&lt;=3;i++){V3.ln(P([i,-3,0]),P([i,3,0]),b,0.5);V3.ln(P([-3,i,0]),P([3,i,0]),b,0.5)}
+  V3.ar(P([0,0,0]),P([3.2,0,0]),m,1);V3.ar(P([0,0,0]),P([0,3.2,0]),m,1);V3.ar(P([0,0,0]),P([0,0,3.4]),m,1);
+  V3.tx(&#x27;x&#x27;,P([3.35,0,0]),m,1);V3.tx(&#x27;y&#x27;,P([0,3.35,0]),m,1);V3.tx(&#x27;z&#x27;,P([0,0,3.5]),m,1);
+  const R=3;[[[0,0],[R,0]],[[R,0],[R,3.2]],[[R,3.2],[0,3.2]],[[0,3.2],[0,0]]].forEach(([a,c])=&gt;V3.ln(P(to3(...a)),P(to3(...c)),&#x27;rgba(127,119,221,.45)&#x27;,1,[5,4]));
+  const S=[0,0,H0],E=to3(rE,zE),T=to3(r,z);
+  V3.ln(P([0,0,0]),P([r*u[0],r*u[1],0]),CT,2.5);V3.ln(P(T),P([T[0],T[1],0]),m,1,[3,3]);
+  if(Math.abs(t1)&gt;0.05){V3.ctx.strokeStyle=CT;V3.ctx.lineWidth=1.5;V3.ctx.beginPath();for(let i=0;i&lt;=20;i++){const a=t1*i/20,q=P([0.8*Math.cos(a),0.8*Math.sin(a),0]);i?V3.ctx.lineTo(...q):V3.ctx.moveTo(...q)}V3.ctx.stroke();V3.tx(&#x27;θ₁&#x27;,P([0.95*Math.cos(t1/2),0.95*Math.sin(t1/2),0]),CT,1)}
+  V3.ctx.lineCap=&#x27;round&#x27;;V3.ln(P([0,0,0]),P(S),arm,14);V3.ln(P(S),P(E),arm,11);V3.ln(P(E),P(T),arm,9);V3.ctx.lineCap=&#x27;butt&#x27;;
+  V3.dot(P(S),pri,4);V3.dot(P(E),pri,4);V3.dot(P(T),CX,6);V3.tx(&#x27;末端&#x27;,[P(T)[0]+8,P(T)[1]-6],pri,1);V3.tx(&#x27;r&#x27;,P([r*u[0]/2,r*u[1]/2,0]),CT,1)}
+ VS.begin();{const s=Math.min(VS.W/4,VS.H/3.6),O=[VS.W*0.3,VS.H-0.35*s],P=(x,y)=&gt;[O[0]+x*s,O[1]-y*s];
+  for(let i=-1;i&lt;=3;i++)VS.ln(P(i,-0.1),P(i,3.2),b,0.5);for(let j=0;j&lt;=3;j++)VS.ln(P(-1,j),P(3,j),b,0.5);
+  VS.ar(P(-1,0),P(3.1,0),m,1);VS.ar(P(0,0),P(0,3.2),m,1);VS.tx(&#x27;往前多远 r&#x27;,[P(3.1,0)[0]-62,P(3.1,0)[1]+14],m);VS.tx(&#x27;高度 z&#x27;,[P(0,3.2)[0]+6,P(0,3.2)[1]+8],m);
+  VS.ctx.lineCap=&#x27;round&#x27;;VS.ln(P(0,0),P(0,H0),arm,12);VS.ln(P(0,H0),P(rE,zE),arm,10);VS.ln(P(rE,zE),P(r,z),arm,8);VS.ctx.lineCap=&#x27;butt&#x27;;
+  VS.dot(P(0,H0),pri,3.5);VS.dot(P(rE,zE),pri,3.5);VS.dot(P(r,z),CX,5);
+  VS.ln(P(r,z),P(r,0),m,1,[3,3]);VS.ln(P(r,z),P(0,z),m,1,[3,3]);VS.ln(P(0,0),P(r,0),CT,2.5);
+  VS.tx(&#x27;肩膀 (0, 1)&#x27;,[P(0,H0)[0]-6,P(0,H0)[1]+4],m,0,&#x27;right&#x27;);VS.tx(`(${f(r)}, ${f(z)})`,[P(r,z)[0]+8,P(r,z)[1]-6],pri,1)}
+ VT.begin();{const s=Math.min(VT.W,VT.H)/7,O=[VT.W/2,VT.H/2],P=(x,y)=&gt;[O[0]+x*s,O[1]-y*s];
+  for(let i=-3;i&lt;=3;i++){VT.ln(P(i,-3),P(i,3),b,0.5);VT.ln(P(-3,i),P(3,i),b,0.5)}
+  VT.ar(P(-3,0),P(3.2,0),m,1);VT.ar(P(0,-3),P(0,3.2),m,1);VT.tx(&#x27;x&#x27;,[P(3.2,0)[0]-4,P(3.2,0)[1]+14],m,1);VT.tx(&#x27;y&#x27;,[P(0,3.2)[0]+6,P(0,3.2)[1]+8],m,1);
+  const X=r*u[0],Y=r*u[1];VT.ln(P(X,Y),P(X,0),CX,1.2,[3,3]);VT.ln(P(X,Y),P(0,Y),CY,1.2,[3,3]);
+  VT.ctx.lineCap=&#x27;round&#x27;;VT.ln(P(0,0),P(X,Y),&#x27;rgba(239,159,39,.85)&#x27;,6);VT.ctx.lineCap=&#x27;butt&#x27;;VT.dot(P(X,Y),CX,5);
+  if(Math.abs(t1)&gt;0.05){VT.ctx.strokeStyle=CT;VT.ctx.lineWidth=1.5;VT.ctx.beginPath();VT.ctx.arc(...P(0,0),s*0.7,0,-t1,t1&gt;0);VT.ctx.stroke()}
+  VT.tx(&#x27;r&#x27;,P(X/2-0.25*u[1],Y/2+0.25*u[0]),CT,1);VT.tx(`(${f(X)}, ${f(Y)})`,[P(X,Y)[0]+8,P(X,Y)[1]-6],pri,1)}
+ const c1=Math.cos(t1),s1=Math.sin(t1);
+ $(&#x27;panel&#x27;).innerHTML=`&lt;div&gt;&lt;div class=&quot;ttl&quot;&gt;① 在墙里算（平面两节手臂）&lt;/div&gt;&lt;div class=&quot;cal&quot;&gt;r = 1.5×cos θ₂ + 1.2×cos(θ₂+θ₃)
+  = 1.5×${fp(Math.cos(t2))} + 1.2×${fp(Math.cos(t2+t3))}
+  = &lt;b&gt;${f(r)}&lt;/b&gt;
+z = 1 + 1.5×sin θ₂ + 1.2×sin(θ₂+θ₃)
+  = 1 + 1.5×${fp(Math.sin(t2))} + 1.2×${fp(Math.sin(t2+t3))}
+  = &lt;b&gt;${f(z)}&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div&gt;&lt;div class=&quot;ttl&quot;&gt;② 转身：把 r 拆成 x 和 y，z 不变&lt;/div&gt;&lt;div class=&quot;cal&quot;&gt;x = r × cos θ₁ = ${fp(r)} × ${fp(c1)} = &lt;b&gt;${f(r*c1)}&lt;/b&gt;
+y = r × sin θ₁ = ${fp(r)} × ${fp(s1)} = &lt;b&gt;${f(r*s1)}&lt;/b&gt;
+z 不变        = &lt;b&gt;${f(z)}&lt;/b&gt;
+
+末端 = (${f(r*c1)}, ${f(r*s1)}, ${f(z)})&lt;/div&gt;&lt;/div&gt;`}
+[&#x27;t1&#x27;,&#x27;t2&#x27;,&#x27;t3&#x27;].forEach(id=&gt;$(id).oninput=()=&gt;{$(id+&#x27;O&#x27;).textContent=$(id).value+&#x27;°&#x27;;draw()});
+const cv=$(&#x27;c3&#x27;);let drag=null;cv.onpointerdown=e=&gt;{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=&gt;{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(-0.2,Math.min(1.4,pitch+(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()};
+cv.onpointerup=()=&gt;drag=null;window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=7;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+
+<h2>为什么还要学 DH？</h2>
+<p>"墙 + 转身"这个办法很直观，但只适合这种结构简单的机械臂。真实的六轴机械臂手腕还有三个关节，转轴朝向各不相同，就拆不成"一面墙"了。所以工程上统一用 DH 表来算。下一课会把这台三关节机械臂写成 DH 表，用矩阵算一遍，结果和这里一样；DH 表里的 α₁ = 90°，其实就是"把墙竖起来"。</p>
+</main><script>
+window.addEventListener('message',function(e){var d=e.data;if(d&&d.fid!==undefined){var f=document.getElementById('f'+d.fid);if(f)f.style.height=(d.h+6)+'px'}});
+</script></body></html>

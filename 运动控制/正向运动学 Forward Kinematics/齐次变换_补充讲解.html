@@ -1,0 +1,360 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>齐次变换矩阵：补充讲解</title><style>
+:root{--bg:#faf9f5;--card:#ffffff;--soft:#f1efe8;--text:#1f1e1d;--sec:#5f5e5a;--muted:#888780;--border:#d3d1c7;--accent:#185FA5;--accent-bg:#E6F1FB}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2928;--soft:#333230;--text:#ecebe6;--sec:#b4b2a9;--muted:#888780;--border:#444441;--accent:#85B7EB;--accent-bg:#0C447C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.8;font-size:16px}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:28px;font-weight:500;margin:0 0 6px}
+h2{font-size:21px;font-weight:500;margin:48px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+h3{font-size:17px;font-weight:500;margin:24px 0 6px}
+p.lead{color:var(--sec);margin:0 0 24px}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:18px 0}
+.card iframe{width:100%;border:0;display:block;height:420px}
+.key{border-left:3px solid var(--accent);background:var(--accent-bg);padding:12px 16px;margin:18px 0}
+table{border-collapse:collapse;margin:12px 0;font-size:15px}
+th,td{border:1px solid var(--border);padding:6px 12px;text-align:left}
+th{background:var(--soft);font-weight:500}
+nav.toc{background:var(--soft);border-radius:10px;padding:12px 18px;margin:0 0 24px;font-size:15px}
+nav.toc a{color:var(--accent);text-decoration:none}
+</style></head><body><main>
+<h1>齐次变换矩阵：补充讲解</h1>
+<p class="lead">配合《齐次变换矩阵.html》一起看。这里收集了学习过程中卡住过的几个问题，每个都配了动画。</p>
+<nav class="toc">1. θ₁ 是哪个角 · 2. B 的轴为什么是 (cos θ₂, sin θ₂) · 3. 方向从 A 翻译到世界 · 4. 矩阵相乘一格一格算 · 5. 补 1 还是补 0 · 6. 按行算和按列看</nav>
+
+<h2>1. θ₁ 是哪个角？</h2>
+<p><b>θ₁ 是 A 的 x 轴和世界 x 轴之间的夹角</b>，也就是 A 相对世界转了多少度。A 自己的 x 轴和 y 轴之间永远是 90°，整个 A 坐标系像一个焊死的直角，转的时候 x_A 和 y_A 一起转。</p>
+<div class="card"><iframe id="f1" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;svg width=&quot;100%&quot; viewBox=&quot;0 0 680 300&quot; role=&quot;img&quot;&gt;&lt;title&gt;θ₁ 是 A 的 x 轴与世界 x 轴之间的夹角&lt;/title&gt;
+&lt;defs&gt;&lt;marker id=&quot;arrow&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;6&quot; markerHeight=&quot;6&quot; orient=&quot;auto-start-reverse&quot;&gt;&lt;path d=&quot;M2 1L8 5L2 9&quot; fill=&quot;none&quot; stroke=&quot;context-stroke&quot; stroke-width=&quot;1.5&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/marker&gt;&lt;/defs&gt;
+&lt;line x1=&quot;240&quot; y1=&quot;240&quot; x2=&quot;470&quot; y2=&quot;240&quot; stroke=&quot;#888780&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;5 4&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+&lt;line x1=&quot;240&quot; y1=&quot;240&quot; x2=&quot;240&quot; y2=&quot;40&quot; stroke=&quot;#888780&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;5 4&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+&lt;text class=&quot;ts&quot; x=&quot;478&quot; y=&quot;244&quot;&gt;世界 x&lt;/text&gt;
+&lt;text class=&quot;ts&quot; x=&quot;246&quot; y=&quot;38&quot;&gt;世界 y&lt;/text&gt;
+&lt;line x1=&quot;240&quot; y1=&quot;240&quot; x2=&quot;412&quot; y2=&quot;140&quot; stroke=&quot;#D85A30&quot; stroke-width=&quot;3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+&lt;line x1=&quot;240&quot; y1=&quot;240&quot; x2=&quot;140&quot; y2=&quot;68&quot; stroke=&quot;#1D9E75&quot; stroke-width=&quot;3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+&lt;text class=&quot;th&quot; x=&quot;420&quot; y=&quot;138&quot; style=&quot;fill:#D85A30&quot;&gt;x_A&lt;/text&gt;
+&lt;text class=&quot;th&quot; x=&quot;104&quot; y=&quot;66&quot; style=&quot;fill:#1D9E75&quot;&gt;y_A&lt;/text&gt;
+&lt;path d=&quot;M330 240 A90 90 0 0 0 318 195&quot; fill=&quot;none&quot; stroke=&quot;#D85A30&quot; stroke-width=&quot;1.5&quot;/&gt;
+&lt;text class=&quot;th&quot; x=&quot;340&quot; y=&quot;222&quot; style=&quot;fill:#D85A30&quot;&gt;θ₁&lt;/text&gt;
+&lt;path d=&quot;M266 225 L251 199 L225 214&quot; fill=&quot;none&quot; stroke=&quot;#1D9E75&quot; stroke-width=&quot;1.2&quot;/&gt;
+&lt;text class=&quot;ts&quot; x=&quot;172&quot; y=&quot;200&quot; text-anchor=&quot;end&quot;&gt;x_A 和 y_A&lt;/text&gt;
+&lt;text class=&quot;ts&quot; x=&quot;172&quot; y=&quot;216&quot; text-anchor=&quot;end&quot;&gt;永远 90°&lt;/text&gt;
+&lt;/svg&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=1;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<p>在机械臂里，θ₁ 就是关节 1 转过的角度。θ₂ 是 B 的 x 轴和 A 的 x 轴之间的夹角，也就是关节 2 相对第一节手臂转了多少。T_WA 第 1 列是 (1, 0) 时，说明 cos θ₁ = 1、sin θ₁ = 0，也就是 θ₁ = 0°。</p>
+
+<h2>2. B 的轴为什么是 (cos θ₂, sin θ₂)？</h2>
+<p>一根长度为 1 的箭头，从 A 的 x 轴开始逆时针转了一个角度。从箭头尖端向两根轴各画一条虚线，得到一个直角三角形：箭头是斜边（长 1），横边长 cos(角度)，竖边长 sin(角度)。所以这根箭头的坐标就是 (cos 角度, sin 角度)。</p>
+<div class="card"><iframe id="f2" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div style=&quot;display:flex;align-items:center;gap:10px;margin:0 0 10px&quot;&gt;
+  &lt;label style=&quot;font-size:13px;color:var(--text-secondary)&quot;&gt;θ₂&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;t&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;30&quot; style=&quot;flex:1&quot;&gt;
+  &lt;span id=&quot;tO&quot; style=&quot;font-size:14px;font-weight:500;min-width:44px;text-align:right&quot;&gt;30°&lt;/span&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:10px;margin:0 0 10px&quot;&gt;
+  &lt;button id=&quot;bx&quot; style=&quot;flex:1&quot;&gt;只看 B 的 x 轴&lt;/button&gt;
+  &lt;button id=&quot;by&quot; style=&quot;flex:1&quot;&gt;只看 B 的 y 轴&lt;/button&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;align-items:center&quot;&gt;
+  &lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:300px&quot;&gt;&lt;/canvas&gt;
+  &lt;div id=&quot;panel&quot; style=&quot;font-size:13px;line-height:1.8&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;;let mode=&#x27;x&#x27;;
+const f=v=&gt;{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-10*Math.cos(an-0.4),b[1]-10*Math.sin(an-0.4));ctx.lineTo(b[0]-10*Math.cos(an+0.4),b[1]-10*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b,al){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=al||&#x27;left&#x27;;ctx.fillText(s,p[0],p[1]);ctx.textAlign=&#x27;left&#x27;}
+function draw(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ const r=Math.min(W,H)*0.36,O=[W/2,H/2],P=(x,y)=&gt;[O[0]+x*r,O[1]-y*r],m=css(&#x27;--text-muted&#x27;),sec=css(&#x27;--text-secondary&#x27;);
+ const deg=+$(&#x27;t&#x27;).value,t=deg*D,ang=mode===&#x27;x&#x27;?t:t+Math.PI/2,c=Math.cos(ang),s=Math.sin(ang),col=mode===&#x27;x&#x27;?CX:CY;
+ ln(P(-1.25,0),P(1.25,0),m,1);ln(P(0,-1.25),P(0,1.25),m,1);tx(&#x27;A 的 x 轴&#x27;,[P(1.25,0)[0]-58,P(1.25,0)[1]+18],m);tx(&#x27;A 的 y 轴&#x27;,[P(0,1.25)[0]+6,P(0,1.25)[1]+4],m);
+ ctx.strokeStyle=css(&#x27;--border-strong&#x27;);ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(O[0],O[1],r,0,7);ctx.stroke();ctx.setLineDash([]);
+ tx(&#x27;1&#x27;,[P(1,0)[0]+4,P(1,0)[1]-6],m);
+ ln(P(c,s),P(c,0),col,1.2,[4,4]);ln(P(c,s),P(0,s),col,1.2,[4,4]);
+ ctx.lineWidth=4;ctx.strokeStyle=&#x27;rgba(216,90,48,.55)&#x27;;ctx.beginPath();ctx.moveTo(...P(0,0));ctx.lineTo(...P(c,0));ctx.stroke();
+ ctx.strokeStyle=&#x27;rgba(29,158,117,.6)&#x27;;ctx.beginPath();ctx.moveTo(...P(0,0));ctx.lineTo(...P(0,s));ctx.stroke();
+ tx(&#x27;横 &#x27;+f(c),[P(c/2,0)[0],P(c/2,0)[1]+(s&gt;=0?18:-8)],sec,1,&#x27;center&#x27;);tx(&#x27;纵 &#x27;+f(s),[P(0,s/2)[0]+(c&gt;=0?-8:8),P(0,s/2)[1]+4],sec,1,c&gt;=0?&#x27;right&#x27;:&#x27;left&#x27;);
+ ar(P(0,0),P(c,s),col,3);tx(mode===&#x27;x&#x27;?&#x27;B 的 x 轴&#x27;:&#x27;B 的 y 轴&#x27;,[P(c*1.12,s*1.12)[0],P(c*1.12,s*1.12)[1]],col,1,&#x27;center&#x27;);
+ const a1=0,a2=-ang;ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(O[0],O[1],r*0.25,Math.min(a1,a2),Math.max(a1,a2));ctx.stroke();
+ tx(mode===&#x27;x&#x27;?&#x27;θ₂&#x27;:&#x27;θ₂+90°&#x27;,[P(0.33*Math.cos(ang/2),0.33*Math.sin(ang/2))[0],P(0.33*Math.cos(ang/2),0.33*Math.sin(ang/2))[1]+4],col,1,&#x27;center&#x27;);
+ const ex=mode===&#x27;x&#x27;?`B 的 x 轴和 A 的 x 轴夹角是 θ₂ = ${deg}°&lt;br&gt;&lt;br&gt;横坐标 = cos ${deg}° = &lt;b&gt;${f(c)}&lt;/b&gt;&lt;br&gt;纵坐标 = sin ${deg}° = &lt;b&gt;${f(s)}&lt;/b&gt;&lt;br&gt;&lt;br&gt;所以 B 的 x 轴在 A 里是&lt;br&gt;&lt;b style=&quot;color:${CX}&quot;&gt;(${f(c)}, ${f(s)})&lt;/b&gt; = (cos θ₂, sin θ₂)`
+ :`B 的 y 轴比 B 的 x 轴多转 90°，夹角是 θ₂ + 90° = ${deg+90}°&lt;br&gt;&lt;br&gt;横坐标 = cos ${deg+90}° = &lt;b&gt;${f(c)}&lt;/b&gt;&lt;br&gt;纵坐标 = sin ${deg+90}° = &lt;b&gt;${f(s)}&lt;/b&gt;&lt;br&gt;&lt;br&gt;所以 B 的 y 轴在 A 里是&lt;br&gt;&lt;b style=&quot;color:${CY}&quot;&gt;(${f(c)}, ${f(s)})&lt;/b&gt; = (−sin θ₂, cos θ₂)`;
+ $(&#x27;panel&#x27;).innerHTML=`&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;${ex}&lt;/div&gt;`;
+ $(&#x27;bx&#x27;).style.borderColor=mode===&#x27;x&#x27;?CX:&#x27;&#x27;;$(&#x27;by&#x27;).style.borderColor=mode===&#x27;y&#x27;?CY:&#x27;&#x27;}
+$(&#x27;t&#x27;).oninput=()=&gt;{$(&#x27;tO&#x27;).textContent=$(&#x27;t&#x27;).value+&#x27;°&#x27;;draw()};
+$(&#x27;bx&#x27;).onclick=()=&gt;{mode=&#x27;x&#x27;;draw()};$(&#x27;by&#x27;).onclick=()=&gt;{mode=&#x27;y&#x27;;draw()};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=2;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<ul>
+<li><b>B 的 x 轴</b>：和 x_A 夹角 θ₂ → (cos θ₂, sin θ₂)</li>
+<li><b>B 的 y 轴</b>：比 B 的 x 轴多转 90°，和 x_A 夹角 θ₂ + 90° → (cos(θ₂+90°), sin(θ₂+90°)) = (−sin θ₂, cos θ₂)</li>
+</ul>
+<div class="key"><b>角度从哪量</b>：统一从 x_A 开始、逆时针量，这样才能都套 (cos, sin) 这一个公式。<br><b>坐标的两个数</b>：第 1 个数 = 沿 x_A 走多少，第 2 个数 = 沿 y_A 走多少。所以 (0, 1) 的意思是"沿 x_A 走 0、沿 y_A 走 1"，正好指向 y_A。</div>
+<p>θ₂ = 0° 时：B 的 x 轴 = (cos 0°, sin 0°) = (1, 0)，B 的 y 轴 = (cos 90°, sin 90°) = (0, 1)，B 没有相对 A 转动。</p>
+
+<h2>3. 方向从 A 翻译到世界</h2>
+<p>左图站在 A 上看，右图放到世界里看。"走法"不变（沿 x_A 走几步、沿 y_A 走几步），只是 x_A 和 y_A 跟着 A 转了 θ₁。默认是 θ₁ = 0°、θ₂ = 90°，试着把 θ₁ 拖到 90°。</p>
+<div class="card"><iframe id="f3" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.ctl{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.ctl label{font-size:13px;color:var(--text-secondary);min-width:72px}
+.ctl span{font-size:13px;font-weight:500;min-width:44px;text-align:right}
+.cal{font-family:var(--font-mono);font-size:13px;line-height:1.9}
+&lt;/style&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;关节 1 θ₁&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;a1&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;0&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;a1O&quot;&gt;0°&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;关节 2 θ₂&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;a2&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;90&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;a2O&quot;&gt;90°&lt;/span&gt;&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:10px;margin:0 0 10px&quot;&gt;
+  &lt;button id=&quot;bx&quot; style=&quot;flex:1&quot;&gt;看 B 的 x 轴&lt;/button&gt;
+  &lt;button id=&quot;by&quot; style=&quot;flex:1&quot;&gt;看 B 的 y 轴&lt;/button&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px&quot;&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:14px;font-weight:500&quot;&gt;① 站在 A 上看&lt;/div&gt;&lt;canvas id=&quot;c0&quot; style=&quot;width:100%;height:260px&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;div style=&quot;font-size:14px;font-weight:500&quot;&gt;② 放到世界里看&lt;/div&gt;&lt;canvas id=&quot;c1&quot; style=&quot;width:100%;height:260px&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;panel&quot; style=&quot;margin-top:10px&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;,CS=&#x27;#7F77DD&#x27;;let mode=&#x27;x&#x27;;
+const f=v=&gt;{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const fp=v=&gt;{const s=f(v);return v&lt;-0.004?&#x27;(&#x27;+s+&#x27;)&#x27;:s};
+function view(id){const cv=$(id),ctx=cv.getContext(&#x27;2d&#x27;);let O,r;
+ const o={ctx,begin(){const d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);r=Math.min(W,H)*0.34;O=[W/2,H/2]},
+ P(x,y){return[O[0]+x*r,O[1]-y*r]},
+ ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...this.P(...a));ctx.lineTo(...this.P(...b));ctx.stroke();ctx.setLineDash([])},
+ ar(a,b,c,w,d){this.ln(a,b,c,w,d);const p=this.P(...a),q=this.P(...b),an=Math.atan2(q[1]-p[1],q[0]-p[0]);if(Math.hypot(q[0]-p[0],q[1]-p[1])&lt;4)return;ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...q);ctx.lineTo(q[0]-10*Math.cos(an-0.4),q[1]-10*Math.sin(an-0.4));ctx.lineTo(q[0]-10*Math.cos(an+0.4),q[1]-10*Math.sin(an+0.4));ctx.fill()},
+ tx(s,p,c,b){const q=this.P(...p);ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.textAlign=&#x27;center&#x27;;ctx.fillText(s,q[0],q[1]);ctx.textAlign=&#x27;left&#x27;}};return o}
+const V0=view(&#x27;c0&#x27;),V1=view(&#x27;c1&#x27;);
+function scene(V,ax,ay,v,world){const m=css(&#x27;--text-muted&#x27;),sec=css(&#x27;--text-secondary&#x27;);
+ if(world){V.ln([-1.4,0],[1.4,0],m,1,[4,4]);V.ln([0,-1.4],[0,1.4],m,1,[4,4]);V.tx(&#x27;世界 x&#x27;,[1.3,-0.12],m);V.tx(&#x27;世界 y&#x27;,[0.22,1.32],m)}
+ V.ar([0,0],[ax[0]*1.3,ax[1]*1.3],sec,1.5);V.ar([0,0],[ay[0]*1.3,ay[1]*1.3],sec,1.5);
+ V.tx(&#x27;x_A&#x27;,[ax[0]*1.48,ax[1]*1.48+0.02],sec,1);V.tx(&#x27;y_A&#x27;,[ay[0]*1.48,ay[1]*1.48],sec,1);
+ const p1=[ax[0]*v[0],ax[1]*v[0]],p2=[p1[0]+ay[0]*v[1],p1[1]+ay[1]*v[1]];
+ V.ar([0,0],p1,CS,4);V.ar(p1,p2,CS,4);
+ if(Math.abs(v[0])&gt;0.15)V.tx(&#x27;走 &#x27;+f(v[0]),[p1[0]/2-ay[0]*0.2,p1[1]/2-ay[1]*0.2],CS,1);
+ if(Math.abs(v[1])&gt;0.15)V.tx(&#x27;走 &#x27;+f(v[1]),[p1[0]+ay[0]*v[1]/2+ax[0]*0.28,p1[1]+ay[1]*v[1]/2+ax[1]*0.28],CS,1);
+ const col=mode===&#x27;x&#x27;?CX:CY;V.ar([0,0],p2,col,3,[6,4]);V.tx(mode===&#x27;x&#x27;?&#x27;B 的 x 轴&#x27;:&#x27;B 的 y 轴&#x27;,[p2[0]*1.15,p2[1]*1.15-0.12],col,1);return p2}
+function draw(){const t1=$(&#x27;a1&#x27;).value*D,t2=$(&#x27;a2&#x27;).value*D,c=Math.cos(t1),s=Math.sin(t1);
+ const v=mode===&#x27;x&#x27;?[Math.cos(t2),Math.sin(t2)]:[-Math.sin(t2),Math.cos(t2)],col=mode===&#x27;x&#x27;?CX:CY,nm=mode===&#x27;x&#x27;?&#x27;B 的 x 轴&#x27;:&#x27;B 的 y 轴&#x27;;
+ V0.begin();scene(V0,[1,0],[0,1],v,false);V1.begin();const w=scene(V1,[c,s],[-s,c],v,true);
+ $(&#x27;panel&#x27;).innerHTML=`&lt;div style=&quot;font-size:14px;color:var(--text-secondary);line-height:1.8&quot;&gt;
+ ① 在 A 里，&lt;span style=&quot;color:${col}&quot;&gt;${nm}&lt;/span&gt; 是 (${f(v[0])}, ${f(v[1])})，意思是：&lt;span style=&quot;color:${CS}&quot;&gt;沿 x_A 走 ${f(v[0])}，再沿 y_A 走 ${f(v[1])}&lt;/span&gt;。&lt;br&gt;
+ ② 放到世界里，&lt;b&gt;走法不变&lt;/b&gt;，只是 x_A、y_A 跟着 A 转了 θ₁。它们在世界里的方向就是 T_WA 的前两列：x_A = (${f(c)}, ${f(s)})，y_A = (${f(-s)}, ${f(c)})。&lt;/div&gt;
+ &lt;div class=&quot;cal&quot; style=&quot;margin-top:8px&quot;&gt;世界里的箭头 = ${f(v[0])} × (${f(c)}, ${f(s)}) + ${f(v[1])} × (${f(-s)}, ${f(c)})&lt;br&gt;
+ &amp;nbsp;&amp;nbsp;x = ${f(c)}×${fp(v[0])} + ${fp(-s)}×${fp(v[1])} + 0.30×0 = &lt;b&gt;${f(w[0])}&lt;/b&gt;&lt;br&gt;
+ &amp;nbsp;&amp;nbsp;y = ${f(s)}×${fp(v[0])} + ${f(c)}×${fp(v[1])} + 0.30×0 = &lt;b&gt;${f(w[1])}&lt;/b&gt;&lt;/div&gt;`;
+ $(&#x27;bx&#x27;).style.borderColor=mode===&#x27;x&#x27;?CX:&#x27;&#x27;;$(&#x27;by&#x27;).style.borderColor=mode===&#x27;y&#x27;?CY:&#x27;&#x27;}
+[&#x27;a1&#x27;,&#x27;a2&#x27;].forEach(id=&gt;$(id).oninput=()=&gt;{$(id+&#x27;O&#x27;).textContent=$(id).value+&#x27;°&#x27;;draw()});
+$(&#x27;bx&#x27;).onclick=()=&gt;{mode=&#x27;x&#x27;;draw()};$(&#x27;by&#x27;).onclick=()=&gt;{mode=&#x27;y&#x27;;draw()};
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=3;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<h3>例子：θ₁ = 0°，θ₂ = 90°</h3>
+<pre>T_WA = ⎡ 1.00   0.00   0.30 ⎤      B 的 x 轴在 A 里：v = (0, 1, 0)
+       ⎢ 0.00   1.00   0.30 ⎥
+       ⎣ 0.00   0.00   1.00 ⎦
+
+算 x：第 1 行 (1.00, 0.00, 0.30) 和 (0, 1, 0)：1.00×0 + 0.00×1 + 0.30×0 = 0
+算 y：第 2 行 (0.00, 1.00, 0.30) 和 (0, 1, 0)：0.00×0 + 1.00×1 + 0.30×0 = 1
+
+结果 (0, 1)：和输入一样，因为 θ₁ = 0°，A 没转，"在 A 里朝上"就是"在世界里朝上"。
+0.30 × 0 = 0：方向不管 A 被挪到哪，平移被挡掉了。</pre>
+<h3>换成 θ₁ = 90°</h3>
+<pre>T_WA 第 1 行变成 (0, −1, 0.30)，第 2 行变成 (1, 0, 0.30)
+
+x = 0×0 + (−1)×1 + 0.30×0 = −1
+y = 1×0 +    0×1 + 0.30×0 =  0      → B 的 x 轴在世界里朝左
+（A 先转了 90°，B 又在 A 上再转 90°，一共 180°）</pre>
+<div class="key">在 A 里读出来的东西，要先用 T_WA 翻译成世界的话，才能和世界里的东西放在一起算（比如相加）。</div>
+
+<h2>4. 矩阵相乘：一格一格算</h2>
+<p>T_WB 第 i 行第 j 列的数 = <b>T_WA 的第 i 行</b>和 <b>T_AB 的第 j 列</b>对应位置相乘，再加起来。下面一列一列往下算：每算完一列，就得到 B 的一样东西。</p>
+<div class="card"><iframe id="f4" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
+:root{--text-primary:#1f1e1d;--text-secondary:#5f5e5a;--text-muted:#888780;--surface-0:#faf9f5;--surface-1:#f1efe8;--surface-2:#ffffff;--border:rgba(31,30,29,.15);--border-strong:rgba(31,30,29,.3);--bg-accent:#E6F1FB;--text-accent:#185FA5;--border-accent:#378ADD;--bg-success:#EAF3DE;--text-success:#3B6D11;--border-success:#639922;--bg-danger:#FCEBEB;--text-danger:#A32D2D;--border-danger:#E24B4A;--font-sans:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;--font-mono:&quot;SF Mono&quot;,Menlo,Consolas,monospace;--radius:8px}
+@media (prefers-color-scheme:dark){:root{--text-primary:#ecebe6;--text-secondary:#b4b2a9;--text-muted:#888780;--surface-1:#333230;--surface-2:#2a2928;--border:rgba(236,235,230,.15);--border-strong:rgba(236,235,230,.3);--bg-accent:#0C447C;--text-accent:#B5D4F4;--bg-success:#27500A;--text-success:#C0DD97;--bg-danger:#791F1F;--text-danger:#F7C1C1}}
+html,body{margin:0;background:transparent;color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.6}
+body{padding:2px}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);cursor:pointer}
+button:hover{background:var(--surface-1)}
+input:not([type]),input[type=text],select{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary);font:inherit;box-sizing:border-box}
+input[type=range]{accent-color:#378ADD}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg text{font-family:var(--font-sans)}
+svg .t{font-size:14px;fill:var(--text-primary)} svg .ts{font-size:12px;fill:var(--text-secondary)} svg .th{font-size:14px;font-weight:500;fill:var(--text-primary)}
+button[onclick*=&quot;sendPrompt&quot;]{display:none}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;
+.ctl{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.ctl label{font-size:13px;color:var(--text-secondary);min-width:72px}
+.ctl span{font-size:13px;font-weight:500;min-width:44px;text-align:right}
+.m{display:inline-grid;grid-template-columns:repeat(3,46px);gap:3px;font-family:var(--font-mono);font-size:12px}
+.m div{padding:5px 0;text-align:center;border-radius:4px;background:var(--surface-1);color:var(--text-secondary);border:1.5px solid transparent}
+.m div.hr{background:rgba(127,119,221,.22);color:var(--text-primary)}
+.m div.hc{background:rgba(239,159,39,.28);color:var(--text-primary)}
+.m div.done{background:var(--surface-1);color:var(--text-primary)}
+.m div.cur{background:rgba(216,90,48,.2);color:var(--text-primary);border-color:#D85A30}
+.m div.q{color:var(--text-muted)}
+.lb{font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.op{font-size:18px;color:var(--text-secondary);align-self:center;padding-top:16px}
+&lt;/style&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;关节 1 θ₁&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;a1&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;30&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;a1O&quot;&gt;30°&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;ctl&quot;&gt;&lt;label&gt;关节 2 θ₂&lt;/label&gt;&lt;input type=&quot;range&quot; id=&quot;a2&quot; min=&quot;-180&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;40&quot; style=&quot;flex:1&quot;&gt;&lt;span id=&quot;a2O&quot;&gt;40°&lt;/span&gt;&lt;/div&gt;
+&lt;canvas id=&quot;cv&quot; style=&quot;width:100%;height:250px&quot;&gt;&lt;/canvas&gt;
+&lt;div style=&quot;display:flex;align-items:center;gap:8px;margin:8px 0 10px&quot;&gt;
+  &lt;button id=&quot;prev&quot;&gt;上一格&lt;/button&gt;&lt;button id=&quot;next&quot;&gt;下一格&lt;/button&gt;&lt;button id=&quot;auto&quot;&gt;自动播放&lt;/button&gt;
+  &lt;span id=&quot;prog&quot; style=&quot;margin-left:auto;font-size:13px;color:var(--text-secondary)&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;div style=&quot;display:flex;gap:10px;flex-wrap:wrap&quot;&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot;&gt;T_WA（A 在世界里）&lt;/div&gt;&lt;div class=&quot;m&quot; id=&quot;mA&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;op&quot;&gt;×&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot;&gt;T_AB（B 在 A 里）&lt;/div&gt;&lt;div class=&quot;m&quot; id=&quot;mB&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;op&quot;&gt;=&lt;/div&gt;
+  &lt;div&gt;&lt;div class=&quot;lb&quot;&gt;T_WB（B 在世界里）&lt;/div&gt;&lt;div class=&quot;m&quot; id=&quot;mC&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;calc&quot; style=&quot;margin-top:12px;font-size:14px;line-height:1.9&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id),cv=$(&#x27;cv&#x27;),ctx=cv.getContext(&#x27;2d&#x27;),D=Math.PI/180;
+const css=v=&gt;getComputedStyle(document.body).getPropertyValue(v).trim()||&#x27;#888&#x27;;
+const CX=&#x27;#D85A30&#x27;,CY=&#x27;#1D9E75&#x27;,CT=&#x27;#EF9F27&#x27;;
+const f=v=&gt;{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const fp=v=&gt;{const s=f(v);return v&lt;-0.004?&#x27;(&#x27;+s+&#x27;)&#x27;:s};
+const T=(x,y,t)=&gt;{const c=Math.cos(t),s=Math.sin(t);return[[c,-s,x],[s,c,y],[0,0,1]]};
+const mm=(A,B)=&gt;A.map(r=&gt;B[0].map((_,j)=&gt;r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const mv=(A,v)=&gt;A.map(r=&gt;r[0]*v[0]+r[1]*v[1]+r[2]*v[2]);
+let k=0,timer=null,W,H,sc,ox,oy;const P=(x,y)=&gt;[ox+x*sc,oy-y*sc];
+const ORDER=[];for(let j=0;j&lt;3;j++)for(let i=0;i&lt;3;i++)ORDER.push([i,j]);
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w){ln(a,b,c,w);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b){ctx.fillStyle=c;ctx.font=(b?&#x27;500 &#x27;:&#x27;&#x27;)+&#x27;13px sans-serif&#x27;;ctx.fillText(s,p[0],p[1])}
+function frame(M,name,hl){const o=mv(M,[0,0,1]),ex=mv(M,[1,0,1]),ey=mv(M,[0,1,1]);
+ const wx=hl===0?4.5:hl===undefined?2.5:1.5,wy=hl===1?4.5:hl===undefined?2.5:1.5;
+ ar(P(o[0],o[1]),P(ex[0],ex[1]),CX,wx);ar(P(o[0],o[1]),P(ey[0],ey[1]),CY,wy);
+ const e=P(ex[0],ex[1]),g=P(ey[0],ey[1]);tx(&#x27;x&#x27;,[e[0]+4,e[1]+4],CX,1);tx(&#x27;y&#x27;,[g[0]+4,g[1]-2],CY,1);
+ const q=P(o[0],o[1]);if(hl===2){ctx.strokeStyle=CT;ctx.lineWidth=3;ctx.beginPath();ctx.arc(q[0],q[1],9,0,7);ctx.stroke()}
+ tx(name,[q[0]-16,q[1]+16],css(&#x27;--text-primary&#x27;),1)}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ sc=Math.min(W/7.4,H/5);ox=(W-6.4*sc)/2+1.2*sc;oy=H-0.9*sc;
+ const b=css(&#x27;--border&#x27;);for(let x=-1;x&lt;=6;x++)ln(P(x,-1),P(x,4),b,0.5);for(let y=-1;y&lt;=4;y++)ln(P(-1.2,y),P(6,y),b,0.5);
+ const m=css(&#x27;--text-muted&#x27;);ar(P(0,0),P(0.8,0),m,1.2);ar(P(0,0),P(0,0.8),m,1.2);tx(&#x27;世界&#x27;,[P(0,0)[0]-32,P(0,0)[1]+16],m);
+ const t1=$(&#x27;a1&#x27;).value*D,t2=$(&#x27;a2&#x27;).value*D,WA=T(0.3,0.3,t1),AB=T(2.2,0,t2),WB=mm(WA,AB),tip=mv(WB,[1.6,0,1]),oA=mv(WA,[0,0,1]),oB=mv(WB,[0,0,1]);
+ ctx.lineCap=&#x27;round&#x27;;ln(P(oA[0],oA[1]),P(oB[0],oB[1]),&#x27;rgba(136,135,128,.45)&#x27;,12);ln(P(oB[0],oB[1]),P(tip[0],tip[1]),&#x27;rgba(136,135,128,.45)&#x27;,10);ctx.lineCap=&#x27;butt&#x27;;
+ const [ci,cj]=ORDER[k];frame(WA,&#x27;A&#x27;);frame(WB,&#x27;B&#x27;,cj);
+ const q=P(tip[0],tip[1]);ctx.fillStyle=css(&#x27;--text-primary&#x27;);ctx.beginPath();ctx.arc(q[0],q[1],5,0,7);ctx.fill();tx(&#x27;末端&#x27;,[q[0]+8,q[1]-6],css(&#x27;--text-primary&#x27;),1);
+ const cell=(M,fn)=&gt;M.map((r,i)=&gt;r.map((v,j)=&gt;`&lt;div class=&quot;${fn(i,j)}&quot;&gt;${fn(i,j).includes(&#x27;q&#x27;)?&#x27;?&#x27;:f(v)}&lt;/div&gt;`).join(&#x27;&#x27;)).join(&#x27;&#x27;);
+ $(&#x27;mA&#x27;).innerHTML=cell(WA,(i,j)=&gt;i===ci?&#x27;hr&#x27;:&#x27;&#x27;);
+ $(&#x27;mB&#x27;).innerHTML=cell(AB,(i,j)=&gt;j===cj?&#x27;hc&#x27;:&#x27;&#x27;);
+ $(&#x27;mC&#x27;).innerHTML=cell(WB,(i,j)=&gt;{const n=ORDER.findIndex(o=&gt;o[0]===i&amp;&amp;o[1]===j);return n===k?&#x27;cur&#x27;:n&lt;k?&#x27;done&#x27;:&#x27;q&#x27;});
+ const r=WA[ci],c=[AB[0][cj],AB[1][cj],AB[2][cj]],res=WB[ci][cj];
+ const what=[[&#x27;B 的 x 轴在世界里的横坐标&#x27;,&#x27;B 的 x 轴在世界里的纵坐标&#x27;,&#x27;第 3 个数：x 轴是方向，所以是 0&#x27;],[&#x27;B 的 y 轴在世界里的横坐标&#x27;,&#x27;B 的 y 轴在世界里的纵坐标&#x27;,&#x27;第 3 个数：y 轴是方向，所以是 0&#x27;],[&#x27;B 的原点在世界里的 x 坐标&#x27;,&#x27;B 的原点在世界里的 y 坐标&#x27;,&#x27;第 3 个数：原点是位置，所以是 1&#x27;]][cj][ci];
+ const pr=`&lt;span style=&quot;background:rgba(127,119,221,.22);padding:1px 4px;border-radius:4px&quot;&gt;`,pc=`&lt;span style=&quot;background:rgba(239,159,39,.28);padding:1px 4px;border-radius:4px&quot;&gt;`,e=&#x27;&lt;/span&gt;&#x27;;
+ $(&#x27;calc&#x27;).innerHTML=`&lt;div style=&quot;color:var(--text-secondary)&quot;&gt;T_WB 第 ${ci+1} 行第 ${cj+1} 列 = ${pr}T_WA 第 ${ci+1} 行${e} 和 ${pc}T_AB 第 ${cj+1} 列${e} 对应位置相乘，再相加：&lt;/div&gt;
+ &lt;div style=&quot;font-family:var(--font-mono);font-size:14px;margin:4px 0&quot;&gt;${pr}${f(r[0])}${e}×${pc}${fp(c[0])}${e} + ${pr}${fp(r[1])}${e}×${pc}${fp(c[1])}${e} + ${pr}${f(r[2])}${e}×${pc}${f(c[2])}${e}&lt;br&gt;= ${f(r[0]*c[0])} + ${fp(r[1]*c[1])} + ${f(r[2]*c[2])} = &lt;b style=&quot;color:#D85A30&quot;&gt;${f(res)}&lt;/b&gt;&lt;/div&gt;
+ &lt;div style=&quot;color:var(--text-secondary)&quot;&gt;意思：${what}${cj&lt;2&amp;&amp;ci&lt;2?&#x27;（图中加粗的箭头）&#x27;:cj===2&amp;&amp;ci&lt;2?&#x27;（图中琥珀色圆圈）&#x27;:&#x27;&#x27;}&lt;/div&gt;`;
+ $(&#x27;prog&#x27;).textContent=`第 ${k+1} / 9 格`}
+const go=n=&gt;{k=(n+9)%9;draw()};
+$(&#x27;next&#x27;).onclick=()=&gt;go(k+1);$(&#x27;prev&#x27;).onclick=()=&gt;go(k-1);
+$(&#x27;auto&#x27;).onclick=()=&gt;{if(timer){clearInterval(timer);timer=null;$(&#x27;auto&#x27;).textContent=&#x27;自动播放&#x27;}else{timer=setInterval(()=&gt;go(k+1),1800);$(&#x27;auto&#x27;).textContent=&#x27;停止&#x27;}};
+[[&#x27;a1&#x27;],[&#x27;a2&#x27;]].forEach(([id])=&gt;$(id).oninput=()=&gt;{$(id+&#x27;O&#x27;).textContent=$(id).value+&#x27;°&#x27;;draw()});
+window.addEventListener(&#x27;resize&#x27;,draw);draw();
+&lt;/script&gt;
+&lt;script&gt;
+window.sendPrompt=function(){};
+(function(){var id=4;function send(){parent.postMessage({fid:id,h:Math.ceil(document.body.getBoundingClientRect().height)+6},&#x27;*&#x27;)}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener(&#x27;load&#x27;,send);setTimeout(send,300);setTimeout(send,1200);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;" loading="lazy"></iframe></div>
+<ul>
+<li>第 1 列算完：B 的 x 轴在世界里朝哪</li>
+<li>第 2 列算完：B 的 y 轴在世界里朝哪</li>
+<li>第 3 列算完：B 的原点在世界里的位置</li>
+</ul>
+<div class="key">每一列的第 3 个数：前两列（方向）是 0，第 3 列（位置）是 1。所以 T_WA 的平移 0.30 只在第 3 列被加进来（0.30 × 1），在前两列被挡掉（0.30 × 0）。这也是最下面一行永远是 0 0 1 的原因。</div>
+
+<h2>5. 补 1 还是补 0？</h2>
+<p>问自己一句："这是一个<b>地方</b>，还是一个<b>朝向</b>？"</p>
+<pre>B 的位置、末端、物体上的点      →  地方  →  补 1（要加平移）
+x_B、y_B、手臂的朝向            →  朝向  →  补 0（不加平移）</pre>
+<p>例子：底座 A 在 (0, 1)，θ₁ = 180°，B 在 A 里是 (2, 0)。</p>
+<pre>T_WA = ⎡ −1   0   0 ⎤
+       ⎢  0  −1   1 ⎥
+       ⎣  0   0   1 ⎦
+
+补 1：T_WA × (2, 0, 1)
+  第 1 行：(−1)×2 +   0×0  + 0×1 = −2
+  第 2 行：  0×2  + (−1)×0 + 1×1 =  1      → B = (−2, 1)  ✓
+
+补 0：T_WA × (2, 0, 0)
+  第 1 行：(−1)×2 +   0×0  + 0×0 = −2
+  第 2 行：  0×2  + (−1)×0 + 1×0 =  0      → (−2, 0)  ✗ 少了底座的位置 (0, 1)</pre>
+<p>其实不用自己判断：(2, 0, 1) 就是 T_AB 最右一列原样拿过来的，它的第 3 个数本来就是 1。</p>
+<p>T_AB 右下角那个 1 和 θ₂、距离都无关：<b>每一个齐次变换矩阵最下面一行都固定是 0 0 1</b>。</p>
+
+<h2>6. 按行算和按列看，是同一件事</h2>
+<p><b>按行算是做法，按列看是意思。</b>同一个乘法：</p>
+<pre>⎡ −1   0   0 ⎤   ⎡ 2 ⎤
+⎢  0  −1   1 ⎥ × ⎢ 0 ⎥
+⎣  0   0   1 ⎦   ⎣ 1 ⎦
+
+按行算：
+x =  (−1)×2   +    0×0    +   0×1   = −2
+y =    0×2    +  (−1)×0   +   1×1   =  1
+
+把每一竖排单独看：
+第 1 竖排：(−1) 和 0  → 矩阵最左一列，都乘了 2
+第 2 竖排：0 和 (−1)  → 矩阵中间一列，都乘了 0
+第 3 竖排：0 和 1     → 矩阵最右一列，都乘了 1</pre>
+<p>自己算的时候，用按行算就行。按列看只是为了理解每一项在干什么：最右一列是 A 的位置，乘 1 就是"把 A 的位置加进来"。</p>
+</main><script>
+window.addEventListener('message',function(e){var d=e.data;if(d&&d.fid!==undefined){var f=document.getElementById('f'+d.fid);if(f)f.style.height=(d.h+6)+'px'}});
+</script></body></html>

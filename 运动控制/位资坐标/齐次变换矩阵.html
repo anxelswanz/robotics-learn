@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>齐次变换矩阵：从零理解</title>
+<style>
+:root{--bg:#faf9f5;--card:#ffffff;--soft:#f1efe8;--text:#1f1e1d;--sec:#5f5e5a;--muted:#888780;--border:#d3d1c7;--accent:#185FA5;--accent-bg:#E6F1FB}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2928;--soft:#333230;--text:#ecebe6;--sec:#b4b2a9;--muted:#888780;--border:#444441;--accent:#85B7EB;--accent-bg:#0C447C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;line-height:1.8;font-size:16px}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:28px;font-weight:500;margin:0 0 6px}
+h2{font-size:21px;font-weight:500;margin:48px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+h3{font-size:17px;font-weight:500;margin:24px 0 6px}
+p.lead{color:var(--sec);margin:0 0 24px}
+pre{background:var(--soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin:18px 0}
+.key{border-left:3px solid var(--accent);background:var(--accent-bg);padding:12px 16px;margin:18px 0}
+button{font:inherit;font-size:14px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer}
+button:hover{background:var(--soft)}
+input[type=range]{accent-color:var(--accent)}
+.pill{display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;font-size:13px;border:1px solid var(--border);color:var(--sec);cursor:pointer}
+.pill.on{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+.ctl{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.ctl label{font-size:13px;color:var(--sec);min-width:64px}
+.ctl span{font-size:13px;font-weight:500;min-width:44px;text-align:right}
+.m{display:inline-grid;gap:3px;font-family:"SF Mono",Menlo,monospace;font-size:12px;vertical-align:middle}
+.m div{padding:4px 2px;text-align:center;border-radius:4px;min-width:42px}
+.rp{background:rgba(127,119,221,.2)}.tp{background:rgba(239,159,39,.25)}.bp{background:var(--soft);color:var(--muted)}.vp{background:var(--soft)}
+.lab{font-size:12px;color:var(--sec);margin:10px 0 4px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}
+@media (max-width:660px){.two{grid-template-columns:1fr}}
+canvas{display:block}
+svg text{font-family:inherit}
+.km{display:inline-grid;grid-template-columns:repeat(3,auto);gap:3px;font-family:"SF Mono",Menlo,monospace;font-size:12px;vertical-align:middle}
+.km div{padding:4px 3px;text-align:center;border-radius:4px;min-width:44px}
+.kc0{background:rgba(216,90,48,.16)}.kc1{background:rgba(29,158,117,.16)}.kc2{background:rgba(239,159,39,.24)}.kcb{background:var(--soft);color:var(--muted)}.kcn{background:var(--soft)}
+.kcal{font-family:"SF Mono",Menlo,monospace;font-size:13px;line-height:1.9}
+.krow{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.knote{font-size:13px;color:var(--sec);line-height:1.7}
+</style>
+</head>
+<body>
+<main>
+<h1>齐次变换矩阵：从零理解</h1>
+<p class="lead">前提：已经理解旋转矩阵（每一列 = 一根轴转到了哪里）。为了好理解，先在平面（2D）上讲，道理和 3D 完全一样，最后再搬到 3D。</p>
+
+<h2>1. 四步交互教程</h2>
+<div class="card">
+  <div style="display:flex;align-items:center;gap:8px;margin:0 0 12px">
+    <div id="pills" style="display:flex;gap:6px"></div>
+    <button id="prev" style="margin-left:auto">上一步</button>
+    <button id="next">下一步</button>
+  </div>
+  <div id="title" style="font-size:17px;font-weight:500;margin:0 0 4px"></div>
+  <div id="desc" style="font-size:14px;color:var(--sec);line-height:1.7;margin:0 0 12px;min-height:48px"></div>
+  <div id="g1">
+    <div class="ctl"><label>位置 x</label><input type="range" id="tx" min="-1" max="4" step="0.1" value="2.5" style="flex:1"><span id="txO">2.5</span></div>
+    <div class="ctl"><label>位置 y</label><input type="range" id="ty" min="-0.5" max="3" step="0.1" value="1.5" style="flex:1"><span id="tyO">1.5</span></div>
+    <div class="ctl"><label>朝向 θ</label><input type="range" id="th" min="-180" max="180" step="1" value="30" style="flex:1"><span id="thO">30°</span></div>
+  </div>
+  <div id="g2">
+    <div class="ctl"><label>关节 1 θ₁</label><input type="range" id="a1" min="-180" max="180" step="1" value="30" style="flex:1"><span id="a1O">30°</span></div>
+    <div class="ctl"><label>关节 2 θ₂</label><input type="range" id="a2" min="-180" max="180" step="1" value="40" style="flex:1"><span id="a2O">40°</span></div>
+  </div>
+  <div class="two" style="margin-top:6px">
+    <canvas id="cv" style="width:100%;height:340px"></canvas>
+    <div id="panel" style="font-size:13px"></div>
+  </div>
+</div>
+
+<h2>1.1 把第 4 步拆开：T_WB = T_WA × T_AB</h2>
+<p>第 4 步其实是把两件事一次做完了，这里拆成 5 小步。默认角度 θ₁ = 48°、θ₂ = 1°，可以拖滑块换别的角度。</p>
+<div class="card">
+  <div style="display:flex;align-items:center;gap:8px;margin:0 0 12px">
+    <div id="k_pills" style="display:flex;gap:6px"></div>
+    <button id="k_prev" style="margin-left:auto">上一步</button>
+    <button id="k_next">下一步</button>
+  </div>
+  <div id="k_title" style="font-size:17px;font-weight:500;margin:0 0 4px"></div>
+  <div id="k_desc" style="font-size:14px;color:var(--sec);line-height:1.7;margin:0 0 12px;min-height:48px"></div>
+  <div class="ctl"><label>关节 1 θ₁</label><input type="range" id="k_a1" min="-180" max="180" step="1" value="48" style="flex:1"><span id="k_a1O">48°</span></div>
+  <div class="ctl"><label>关节 2 θ₂</label><input type="range" id="k_a2" min="-180" max="180" step="1" value="1" style="flex:1"><span id="k_a2O">1°</span></div>
+  <div class="ctl" id="k_gs"><label>把 A 放回去</label><input type="range" id="k_ss" min="0" max="100" step="1" value="0" style="flex:1"><span id="k_ssO">0%</span><button id="k_play">播放</button></div>
+  <canvas id="k_cv" style="width:100%;height:300px"></canvas>
+  <div id="k_panel" style="margin-top:10px"></div>
+</div>
+<h3>用 θ₁ = 48°、θ₂ = 1° 的数字对一遍</h3>
+<p><b>一个比喻：</b>T_AB 是“用 A 的话”写下的 B 的位置和朝向；T_WA 是一个翻译，把“A 的话”翻译成“世界的话”。两个矩阵相乘，就是让 T_WA 把 T_AB 的每一列都翻译一遍。</p>
+<pre>T_WA = ⎡ 0.67  −0.74  0.30 ⎤      T_AB = ⎡ 1.00  −0.02  2.20 ⎤
+       ⎢ 0.74   0.67  0.30 ⎥             ⎢ 0.02   1.00  0.00 ⎥
+       ⎣ 0.00   0.00  1.00 ⎦             ⎣ 0.00   0.00  1.00 ⎦
+
+T_AB 的三列：
+  第 1 列 (1.00, 0.02, 0)    B 的 x 轴，在 A 里朝哪
+  第 2 列 (−0.02, 1.00, 0)   B 的 y 轴，在 A 里朝哪
+  第 3 列 (2.20, 0.00, 1)    B 的原点，在 A 里的位置
+
+用 T_WA 的每一行，分别去乘这三列：
+
+第 3 列（B 的原点）：
+  0.67×2.20 + (−0.74)×0.00 + 0.30×1 = 1.47 + 0 + 0.30 = 1.77
+  0.74×2.20 +   0.67×0.00  + 0.30×1 = 1.63 + 0 + 0.30 = 1.93
+
+第 1 列（B 的 x 轴）：
+  0.67×1.00 + (−0.74)×0.02 + 0.30×0 = 0.67 − 0.01 + 0 = 0.66
+  0.74×1.00 +   0.67×0.02  + 0.30×0 = 0.74 + 0.01 + 0 = 0.75
+
+第 2 列（B 的 y 轴）：
+  0.67×(−0.02) + (−0.74)×1.00 + 0.30×0 = −0.01 − 0.74 = −0.75
+  0.74×(−0.02) +   0.67×1.00  + 0.30×0 = −0.01 + 0.67 =  0.66
+
+按列放回去：
+T_WB = ⎡ 0.66  −0.75  1.77 ⎤
+       ⎢ 0.75   0.66  1.93 ⎥
+       ⎣ 0.00   0.00  1.00 ⎦</pre>
+<div class="key">注意每一列的第 3 个数：两根轴那两列是 0，原点那一列是 1。轴是方向，不应该加平移，0.30 × 0 把平移挡掉；原点是位置，需要加平移，0.30 × 1 把它加进来。这也是每个齐次变换矩阵最下面一行都是 0 0 1 的原因：前两列是方向（0），最后一列是位置（1）。</div>
+<p>如果再加第 3 节手臂 C，就是 T_WC = T_WA × T_AB × T_BC，一层层翻译下去。6 轴机械臂就乘 6 个。</p>
+
+<h2>2. 为什么要补一个“1”？</h2>
+<p>旋转是乘法（R × p），平移是加法（+ t）。单靠 2×2 矩阵做乘法，没办法“加上一个固定的数”。补了 1 之后：</p>
+<pre>⎡ c  −s  tx ⎤   ⎡ px ⎤   ⎡ c·px − s·py + tx·1 ⎤
+⎢ s   c  ty ⎥ × ⎢ py ⎥ = ⎢ s·px + c·py + ty·1 ⎥
+⎣ 0   0   1 ⎦   ⎣  1 ⎦   ⎣         1          ⎦
+
+第 1 行：cosθ×px − sinθ×py  +  tx×1
+        └──── 这是旋转 ────┘   └ 这是平移</pre>
+<h3>用数字一行一行算</h3>
+<p>物体不转（θ = 0），只往右移 3、往上移 2，t = (3, 2)。点 p = (1, 0.5)，补 1 写成 (1, 0.5, 1)。规则：矩阵的一行和向量对应位置相乘，再加起来。</p>
+<pre>T = ⎡ 1  0  3 ⎤
+    ⎢ 0  1  2 ⎥
+    ⎣ 0  0  1 ⎦
+
+第 1 行 (1, 0, 3) 和 (1, 0.5, 1)：  1×1 + 0×0.5 + 3×1 = 1 + 0 + 3 = 4
+第 2 行 (0, 1, 2) 和 (1, 0.5, 1)：  0×1 + 1×0.5 + 2×1 = 0 + 0.5 + 2 = 2.5
+第 3 行 (0, 0, 1) 和 (1, 0.5, 1)：  0 + 0 + 1×1 = 1
+
+结果 (4, 2.5, 1)  →  去掉最后的 1  →  P 的新位置 (4, 2.5)
+
+4   = 1   + 3      原来的 x  +  往右移的 3
+2.5 = 0.5 + 2      原来的 y  +  往上移的 2</pre>
+<p>每一行的最后一项是 3×1 和 2×1：因为乘的是 1，3 和 2 原封不动地成了加法里的一项，等于“加了 3”和“加了 2”。</p>
+<div class="card">
+<svg width="100%" viewBox="0 0 680 340" role="img" aria-label="点从 (1, 0.5) 平移到 (4, 2.5)">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g stroke="#B4B2A9" stroke-width="0.5" opacity="0.6">
+<line x1="160" y1="60" x2="160" y2="300"/><line x1="220" y1="60" x2="220" y2="300"/><line x1="280" y1="60" x2="280" y2="300"/><line x1="340" y1="60" x2="340" y2="300"/><line x1="400" y1="60" x2="400" y2="300"/><line x1="460" y1="60" x2="460" y2="300"/>
+<line x1="160" y1="300" x2="520" y2="300"/><line x1="160" y1="240" x2="520" y2="240"/><line x1="160" y1="180" x2="520" y2="180"/><line x1="160" y1="120" x2="520" y2="120"/><line x1="160" y1="60" x2="520" y2="60"/>
+</g>
+<line x1="160" y1="300" x2="525" y2="300" stroke="#888780" marker-end="url(#arrow)"/>
+<line x1="160" y1="300" x2="160" y2="52" stroke="#888780" marker-end="url(#arrow)"/>
+<g font-size="12" fill="#888780"><text x="160" y="320" text-anchor="middle">0</text><text x="220" y="320" text-anchor="middle">1</text><text x="280" y="320" text-anchor="middle">2</text><text x="340" y="320" text-anchor="middle">3</text><text x="400" y="320" text-anchor="middle">4</text><text x="460" y="320" text-anchor="middle">5</text>
+<text x="148" y="244" text-anchor="end">1</text><text x="148" y="184" text-anchor="end">2</text><text x="148" y="124" text-anchor="end">3</text><text x="534" y="304">x</text><text x="156" y="44">y</text></g>
+<line x1="226" y1="270" x2="392" y2="270" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<line x1="400" y1="264" x2="400" y2="158" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="310" y="290" text-anchor="middle" font-size="14" font-weight="500" fill="currentColor">右移 +3</text>
+<text x="412" y="215" font-size="14" font-weight="500" fill="currentColor">上移 +2</text>
+<circle cx="220" cy="270" r="6" fill="none" stroke="#888780" stroke-width="2"/>
+<text x="214" y="256" text-anchor="end" font-size="12" fill="#888780">原来 (1, 0.5)</text>
+<circle cx="400" cy="150" r="6" fill="#D85A30"/>
+<text x="414" y="146" font-size="14" font-weight="500" fill="currentColor">新位置 (4, 2.5)</text>
+</svg>
+</div>
+<h3>如果没有这个 1</h3>
+<p>只用 2×2 矩阵，每一行只有“某数×px + 某数×py”两项，没有任何一项是单独加上的固定数。比如原点 (0, 0) 乘任何 2×2 矩阵都还是 (0, 0)，根本移不动。补上的 1 就像在向量里多开了一个格子，专门装“要加上的固定数”。</p>
+
+<h2>3. 为什么最下面一行是 0 0 1？</h2>
+<h3>原因一：要有第 3 行，矩阵才是方的，才能串起来乘</h3>
+<p>去掉最下面一行，矩阵只剩 2×3，乘 (1, 0.5, 1) 只得到两个数 (4, 2.5)，那个 1 就丢了，下一个矩阵没法再加平移；而且两个 2×3 矩阵也乘不到一起（前一个的列数要等于后一个的行数）。</p>
+<h3>原因二：必须是 0 0 1，结果的第 3 个数才刚好还是 1</h3>
+<pre>第 3 个结果数 = 0×px + 0×py + 1×1 = 1</pre>
+<p>前两个 0 挡掉 px、py，最后的 1×1 留下 1。不管点在哪，第 3 个数永远是 1。</p>
+<p><b>换成别的数就会出错。</b>比如写成 0 0 2：</p>
+<pre>第一次：(1, 0.5, 1) 右移 3、上移 2
+第 3 个数 = 0×1 + 0×0.5 + 2×1 = 2     ← 结果变成 (4, 2.5, 2)，不再是 1
+
+第二次：再左移 1、上移 1
+x = 1×4 + 0×2.5 + (−1)×2 = 2         ← 应该是 3
+y = 0×4 + 1×2.5 +   1×2  = 4.5       ← 应该是 3.5</pre>
+<p>第 3 个数变成 2，第二次的平移被乘了 2 倍，移多了。写成 1 0 1 的话，第 3 个数会变成 px + 1，跟着点的位置变，后面全乱。</p>
+<h3>保留 1 才能一直串下去</h3>
+<pre>⎡ 1  0  −1 ⎤   ⎡ 4   ⎤   ⎡ 1×4 + 0×2.5 + (−1)×1 ⎤   ⎡ 3   ⎤
+⎢ 0  1   1 ⎥ × ⎢ 2.5 ⎥ = ⎢ 0×4 + 1×2.5 +   1×1  ⎥ = ⎢ 3.5 ⎥
+⎣ 0  0   1 ⎦   ⎣ 1   ⎦   ⎣ 0   +   0   +   1×1  ⎦   ⎣ 1   ⎦</pre>
+<div class="key">整个流程：① 补 1，(1, 0.5) → (1, 0.5, 1)；② 乘矩阵，乘几个都行，1 会一直保留；③ 去掉 1，取前面的数作为最终坐标。最下面那行 0 0 1 就是负责让这个 1 一直保留的“保持器”。</div>
+
+<h2>4. 这个矩阵怎么“读”？</h2>
+<p>还是老办法：<b>每一列 = 什么东西到了哪里</b>。</p>
+<ul>
+<li>第 1 列 = 物体自己的 x 轴在世界里朝哪</li>
+<li>第 2 列 = 物体自己的 y 轴在世界里朝哪</li>
+<li>第 3 列 = 物体坐标系的原点在世界里的位置</li>
+</ul>
+<p>所以：左上角读姿态，最右一列读位置。</p>
+<h3>例子：朝向 −180° 时，旋转部分为什么是 (−1 0 / 0 −1)？</h3>
+<p>要<b>竖着按列读</b>：</p>
+<pre>        第1列  第2列
+       ⎡ −1     0 ⎤        第 1 列 (−1, 0) = (cos θ, sin θ)：x 轴转完朝左
+       ⎣  0    −1 ⎦        第 2 列 (0, −1) = (−sin θ, cos θ)：y 轴转完朝下
+
+⎡ cos θ   −sin θ ⎤      cos 出现两次（左上、右下），sin 也出现两次
+⎣ sin θ    cos θ ⎦      所以 −1 出现两次、0 出现两次</pre>
+<p>乘以 (1, 0.5)：</p>
+<pre>⎡ −1   0 ⎤   ⎡ 1   ⎤   ⎡ −1×1 + 0×0.5    ⎤   ⎡ −1   ⎤
+⎣  0  −1 ⎦ × ⎣ 0.5 ⎦ = ⎣  0×1 + (−1)×0.5 ⎦ = ⎣ −0.5 ⎦
+
+用列的想法：1 × (−1, 0) + 0.5 × (0, −1) = (−1, −0.5)</pre>
+<p>转 180° 就是把点“掉头”到对面，两个坐标都变号。最后再加上物体的位置 t。</p>
+
+<h2>5. 搬到 3D：4×4 矩阵</h2>
+<pre>⎡ r11  r12  r13  tx ⎤
+⎢ r21  r22  r23  ty ⎥     左上 3×3：3D 旋转矩阵（姿态）
+⎢ r31  r32  r33  tz ⎥     右边一列：位置 (tx, ty, tz)
+⎣  0    0    0    1 ⎦     最下一行：固定是 0 0 0 1</pre>
+<p>点写成 (px, py, pz, 1)，乘法和串联的规则都不变。</p>
+
+<h2>6. 和正向运动学的关系</h2>
+<p>动画第 4 步已经是正向运动学了：给每一节手臂写一个齐次变换矩阵，按顺序乘起来，就得到末端的位姿。真实机械臂有 6 节，就是乘 6 个矩阵。下一步要学的 <b>DH 参数</b>，就是一套“怎么给每一节写这个矩阵”的标准规则。</p>
+</main>
+
+<script>
+const S=[
+['第 1 步：位姿 = 位置 + 姿态','要描述一个物体（比如机器人底盘）在哪、朝哪，需要两样东西：位置 (x, y) 和朝向角 θ。物体身上带着自己的小坐标系（橙色 x、绿色 y），它跟着物体一起走、一起转。拖滑块试试。'],
+['第 2 步：物体上的一个点，在世界里坐标是多少？','点 P 固定在物体上，在物体自己的坐标系里永远是 (1, 0.5)。要算它在世界里的坐标，分两步：先按物体的朝向转一下（R × p，紫色虚线），再加上物体的位置（+ t，琥珀色虚线）。'],
+['第 3 步：把“转”和“移”装进一个矩阵','把旋转矩阵 R（紫色）和位置 t（琥珀色）拼成一个 3×3 的矩阵 T，最下面补一行 0 0 1；点的坐标后面也补一个 1。这样一次矩阵乘法就同时完成了“转”和“移”。这个 T 就叫齐次变换矩阵。'],
+['第 4 步：变换可以串起来：矩阵相乘','A 是第一节手臂的坐标系，它在世界里的位姿是 T_WA。B 装在 A 的末端，B 相对于 A 的位姿是 T_AB。那 B 在世界里的位姿就是 T_WB = T_WA × T_AB。这就是一条两节的机械臂，也正是正向运动学。']];
+let step=0;const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d'),D=Math.PI/180;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const CX='#D85A30',CY='#1D9E75',CR='#7F77DD',CT='#EF9F27';
+const f=v=>{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const T=(x,y,t)=>{const c=Math.cos(t),s=Math.sin(t);return[[c,-s,x],[s,c,y],[0,0,1]]};
+const mm=(A,B)=>A.map(r=>B[0].map((_,j)=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const mv=(A,v)=>A.map(r=>r[0]*v[0]+r[1]*v[1]+r[2]*v[2]);
+let W,H,sc,ox,oy;const P=(x,y)=>[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w,d){ln(a,b,c,w,d);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function txt(s,p,c,b){ctx.fillStyle=c;ctx.font=(b?'500 ':'')+'13px sans-serif';ctx.fillText(s,p[0],p[1])}
+function frame(M,name,body){const o=mv(M,[0,0,1]),ex=mv(M,[1,0,1]),ey=mv(M,[0,1,1]);
+ if(body){const cs=[[-0.45,-0.3],[0.45,-0.3],[0.45,0.3],[-0.45,0.3]].map(p=>P(...mv(M,[p[0],p[1],1])));ctx.fillStyle='rgba(136,135,128,.15)';ctx.strokeStyle=css('--sec');ctx.lineWidth=1;ctx.beginPath();cs.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fill();ctx.stroke()}
+ ar(P(o[0],o[1]),P(ex[0],ex[1]),CX,2.5);ar(P(o[0],o[1]),P(ey[0],ey[1]),CY,2.5);
+ const e=P(ex[0],ex[1]),g=P(ey[0],ey[1]);txt('x',[e[0]+4,e[1]+4],CX,1);txt('y',[g[0]+4,g[1]-2],CY,1);
+ if(name){const q=P(o[0],o[1]);txt(name,[q[0]-16,q[1]+16],css('--text'),1)}}
+function grid(){const b=css('--border');for(let x=-1;x<=6;x++)ln(P(x,-1),P(x,4.2),b,0.5);for(let y=-1;y<=4;y++)ln(P(-1.2,y),P(6,y),b,0.5);
+ const m=css('--muted');ar(P(0,0),P(1,0),m,1.5);ar(P(0,0),P(0,1),m,1.5);txt('世界',[P(0,0)[0]-30,P(0,0)[1]+16],m)}
+function mat(M,cls){return `<div class="m" style="grid-template-columns:repeat(${M[0].length},auto)">`+M.map((r,i)=>r.map((v,j)=>`<div class="${cls(i,j)}">${f(v)}</div>`).join('')).join('')+'</div>'}
+const tcls=(i,j)=>i===2?'bp':j===2?'tp':'rp';
+function vec(v,cls){return `<div class="m" style="grid-template-columns:auto">`+v.map((x,i)=>`<div class="${cls?cls(i):'vp'}">${f(x)}</div>`).join('')+'</div>'}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ sc=Math.min(W/7.4,H/5.4);ox=(W-6.8*sc)/2+1.1*sc;oy=H-1.1*sc;grid();
+ let h='';const pri=css('--text');
+ if(step<3){const x=+$('tx').value,y=+$('ty').value,t=$('th').value*D,M=T(x,y,t);
+  if(step===0){ar(P(0,0),P(x,y),CT,1.5,[5,4]);frame(M,'',true);
+   h=`<div class="lab">位置（物体坐标系原点在哪）</div><div style="font-family:monospace;font-size:14px">(${f(x)}, ${f(y)})</div><div class="lab">姿态（朝向）</div><div style="font-family:monospace;font-size:14px">θ = ${$('th').value}°</div><div style="margin-top:14px;color:var(--sec);line-height:1.6">这两样合起来叫“位姿”。2D 里是 3 个数，3D 里是 6 个自由度（3 个位置 + 3 个姿态）。</div>`}
+  else{const p=[1,0.5],Rp=[Math.cos(t)*p[0]-Math.sin(t)*p[1],Math.sin(t)*p[0]+Math.cos(t)*p[1]],w=[Rp[0]+x,Rp[1]+y];
+   frame(M,'',true);ar(P(0,0),P(x,y),CT,1.5,[5,4]);ar(P(x,y),P(w[0],w[1]),CR,1.5,[5,4]);
+   const q=P(w[0],w[1]);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(q[0],q[1],5,0,7);ctx.fill();txt('P',[q[0]+8,q[1]-6],pri,1);
+   const c=Math.cos(t),s=Math.sin(t);
+   if(step===1)h=`<div class="lab">① 先转：R × p</div>${mat([[c,-s],[s,c]],()=>'rp')} × ${vec(p)} = ${vec(Rp,()=>'rp')}<div class="lab">② 再移：+ t</div>${vec(Rp,()=>'rp')} + ${vec([x,y],()=>'tp')} = ${vec(w)}<div style="margin-top:12px;color:var(--sec);line-height:1.6">P 在世界里的坐标 = (${f(w[0])}, ${f(w[1])})</div>`;
+   else h=`<div class="lab">T × (p, 1)</div>${mat(M,tcls)} × ${vec([1,0.5,1],i=>i===2?'bp':'vp')}<div style="margin:6px 0">= ${vec([w[0],w[1],1],i=>i===2?'bp':'vp')}</div><div style="color:var(--sec);line-height:1.7"><span style="color:${CR}">■</span> 旋转 R（负责“转”）<br><span style="color:${CT}">■</span> 位置 t（负责“移”）<br>补的 1 让 t 也能参与乘法</div>`}}
+ else{const t1=$('a1').value*D,t2=$('a2').value*D,WA=T(0.3,0.3,t1),AB=T(2.2,0,t2),WB=mm(WA,AB),tip=mv(WB,[1.6,0,1]);
+  const oA=mv(WA,[0,0,1]),oB=mv(WB,[0,0,1]);
+  ctx.lineCap='round';ln(P(oA[0],oA[1]),P(oB[0],oB[1]),'rgba(136,135,128,.45)',12);ln(P(oB[0],oB[1]),P(tip[0],tip[1]),'rgba(136,135,128,.45)',10);ctx.lineCap='butt';
+  frame(WA,'A',false);frame(WB,'B',false);
+  const q=P(tip[0],tip[1]);ctx.fillStyle=pri;ctx.beginPath();ctx.arc(q[0],q[1],5,0,7);ctx.fill();txt('末端',[q[0]+8,q[1]-6],pri,1);
+  h=`<div class="lab">T_WA（A 在世界里）</div>${mat(WA,tcls)}<div class="lab">× T_AB（B 在 A 里）</div>${mat(AB,tcls)}<div class="lab">= T_WB（B 在世界里）</div>${mat(WB,tcls)}<div style="margin-top:8px;color:var(--sec);line-height:1.6">末端在 B 里是 (1.6, 0)，在世界里是 (${f(tip[0])}, ${f(tip[1])})</div>`}
+ $('panel').innerHTML=h}
+function setStep(i){step=i;$('title').textContent=S[i][0];$('desc').textContent=S[i][1];
+ $('g1').style.display=i<3?'block':'none';$('g2').style.display=i===3?'block':'none';
+ $('pills').innerHTML=S.map((_,k)=>`<span class="pill ${k===i?'on':''}" data-k="${k}">${k+1}</span>`).join('');
+ $('pills').querySelectorAll('.pill').forEach(p=>p.onclick=()=>setStep(+p.dataset.k));draw()}
+$('prev').onclick=()=>setStep((step+3)%4);$('next').onclick=()=>setStep((step+1)%4);
+[['tx',''],['ty',''],['th','°'],['a1','°'],['a2','°']].forEach(([id,u])=>$(id).oninput=()=>{$(id+'O').textContent=$(id).value+u;draw()});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+setStep(0);
+</script>
+<script>
+(function(){
+const S=[
+['① 先读懂 T_WA：A 在世界里在哪、朝哪','T_WA 就是齐次变换矩阵，按列读：第 1 列 = A 的 x 轴在世界里朝哪，第 2 列 = A 的 y 轴朝哪，第 3 列 = A 的原点在世界里的位置。它只和关节 1 有关。'],
+['② 再读懂 T_AB：站在 A 身上看 B','T_AB 描述的是“从 A 的角度看，B 在哪、朝哪”。画面里的格子现在是 A 自己的格子：A 摆正放在原点。B 在 A 的 x 轴上 2.2 远（第一节手臂的长度），并且比 A 多转了 θ₂。拖 θ₂ 试试。'],
+['③ 把 A 放回世界，B 坐在 A 上跟着走','拖“把 A 放回去”或点播放：A 从摆正的位置，转到 θ₁，再移到 (0.3, 0.3)。B 焊在 A 上一起动。矩阵乘法 T_WA × (2.2, 0, 1) 就是在算：B 的原点最后落在世界里哪里。'],
+['④ B 的两根轴也要一起换算','B 不只有原点，还有自己的 x 轴、y 轴。它们在 A 里的方向，是 T_AB 的第 1、2 列。用 T_WA 去乘它们，就得到它们在世界里的方向。注意方向的第 3 个数是 0，所以不加平移。'],
+['⑤ 三列拼起来，就是 T_WB','T_WA × T_AB 其实就是：用 T_WA 分别去乘 T_AB 的每一列。③ 算出的 B 原点放第 3 列，④ 算出的 B 的 x 轴、y 轴放第 1、2 列。拼起来就是 T_WB：B 在世界里的位姿。']];
+let step=0,playing=false;const $=id=>document.getElementById('k_'+id),cv=$('cv'),ctx=cv.getContext('2d'),D=Math.PI/180;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const CX='#D85A30',CY='#1D9E75',CT='#EF9F27',L1=2.2,L2=1.3,A0=[0.3,0.3];
+const f=v=>{const r=Math.round(v*100)/100;return(r===0?0:r).toFixed(2)};
+const fp=v=>{const s=f(v);return v<-0.004?'('+s+')':s};
+const T=(x,y,t)=>{const c=Math.cos(t),s=Math.sin(t);return[[c,-s,x],[s,c,y],[0,0,1]]};
+const mm=(A,B)=>A.map(r=>B[0].map((_,j)=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const mv=(A,v)=>A.map(r=>r[0]*v[0]+r[1]*v[1]+r[2]*v[2]);
+let W,H,sc,ox,oy;const P=(x,y)=>[ox+x*sc,oy-y*sc];
+function ln(a,b,c,w,d){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([])}
+function ar(a,b,c,w,d){ln(a,b,c,w,d);const an=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(an-0.4),b[1]-9*Math.sin(an-0.4));ctx.lineTo(b[0]-9*Math.cos(an+0.4),b[1]-9*Math.sin(an+0.4));ctx.fill()}
+function tx(s,p,c,b){ctx.fillStyle=c;ctx.font=(b?'500 ':'')+'13px sans-serif';ctx.fillText(s,p[0],p[1])}
+function frame(M,nm,w,ghost){const o=mv(M,[0,0,1]),ex=mv(M,[0.9,0,1]),ey=mv(M,[0,0.9,1]),d=ghost?[4,4]:null,ww=ghost?1.2:w;
+ ar(P(o[0],o[1]),P(ex[0],ex[1]),CX,ww,d);ar(P(o[0],o[1]),P(ey[0],ey[1]),CY,ww,d);
+ if(!ghost){const e=P(ex[0],ex[1]),g=P(ey[0],ey[1]);tx('x'+nm,[e[0]+4,e[1]+4],CX,1);tx('y'+nm,[g[0]+4,g[1]-3],CY,1);
+  const q=P(o[0],o[1]);ctx.fillStyle=css('--text');ctx.beginPath();ctx.arc(q[0],q[1],4,0,7);ctx.fill();tx(nm,[q[0]-16,q[1]+15],css('--text'),1)}}
+function arm(WA,WB,ghost){const a=mv(WA,[0,0,1]),b=mv(WB,[0,0,1]),c=mv(WB,[L2,0,1]),col=ghost?'rgba(136,135,128,.18)':'rgba(136,135,128,.4)';
+ ctx.lineCap='round';ln(P(a[0],a[1]),P(b[0],b[1]),col,12);ln(P(b[0],b[1]),P(c[0],c[1]),col,9);ctx.lineCap='butt'}
+function grid(M,lab){const b=css('--border');for(let i=-2;i<=6;i++){const p1=mv(M,[i,-1.5,1]),p2=mv(M,[i,4.5,1]),p3=mv(M,[-2,i,1]),p4=mv(M,[6,i,1]);ln(P(p1[0],p1[1]),P(p2[0],p2[1]),b,0.5);if(i<=4)ln(P(p3[0],p3[1]),P(p4[0],p4[1]),b,0.5)}
+ tx(lab,[10,18],css('--sec'))}
+function mat(M,hl){return `<div class="km">`+M.map((r,i)=>r.map((v,j)=>`<div class="${i===2?'kcb':(hl===undefined||hl===j)?'kc'+j:'kcn'}">${f(v)}</div>`).join('')).join('')+'</div>'}
+function draw(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,W,H);
+ sc=Math.min(W/6.4,H/4.4);ox=W/2-1.6*sc;oy=H-0.7*sc;
+ const t1=$('a1').value*D,t2=$('a2').value*D,WA=T(A0[0],A0[1],t1),AB=T(L1,0,t2),WB=mm(WA,AB);
+ const c=Math.cos(t1),s=Math.sin(t1),c2=Math.cos(t2),s2=Math.sin(t2);let h='';
+ if(step===1){const I=T(0,0,0);grid(I,'这里的格子 = A 自己的格子（A 摆正放在原点）');arm(I,AB);frame(I,'A',2.5);frame(AB,'B',2.5);
+  const o=P(0,0),q=P(L1,0);ln([o[0],o[1]+22],[q[0],q[1]+22],CT,1.5);tx('2.2',[(o[0]+q[0])/2-10,o[1]+38],CT,1);
+  h=`<div class="krow"><div><div class="knote">T_AB（B 在 A 里）</div>${mat(AB)}</div><div class="knote" style="flex:1;min-width:220px">
+  <span style="color:${CX}">■</span> 第 1 列 (${f(c2)}, ${f(s2)})：B 的 x 轴，在 A 看来朝哪<br><span style="color:${CY}">■</span> 第 2 列 (${f(-s2)}, ${f(c2)})：B 的 y 轴，在 A 看来朝哪<br><span style="color:${CT}">■</span> 第 3 列 (2.20, 0.00)：B 的原点，在 A 的 x 轴上 2.2 远<br>这个矩阵只和关节 2 有关，跟 A 在世界里怎么放无关。</div></div>`}
+ else{let s3=step===2?$('ss').value/100:1;const WAs=step===2?T(A0[0]*s3,A0[1]*s3,t1*s3):WA,WBs=mm(WAs,AB);
+  grid(T(0,0,0),'这里的格子 = 世界的格子');
+  if(step===2&&s3<1){arm(T(0,0,0),AB,true);frame(T(0,0,0),'',1,true);frame(AB,'',1,true)}
+  arm(WAs,WBs);frame(WAs,'A',2.5);
+  if(step===0){const b=P(0,0),m=css('--muted');ar(b,P(0.8,0),m,1.2);ar(b,P(0,0.8),m,1.2);tx('世界',[b[0]-34,b[1]+14],m)}
+  else frame(WBs,'B',step===3?3.5:2.5);
+  if(step===0)h=`<div class="krow"><div><div class="knote">T_WA（A 在世界里）</div>${mat(WA)}</div><div class="knote" style="flex:1;min-width:220px">
+   <span style="color:${CX}">■</span> 第 1 列 (${f(c)}, ${f(s)})：A 的 x 轴朝哪 = (cos θ₁, sin θ₁)<br><span style="color:${CY}">■</span> 第 2 列 (${f(-s)}, ${f(c)})：A 的 y 轴朝哪 = (−sin θ₁, cos θ₁)<br><span style="color:${CT}">■</span> 第 3 列 (0.30, 0.30)：A 的原点（底座）在世界里的位置</div></div>`;
+  else if(step===2){const r=mv(WA,[L1,0,1]);
+   h=`<div class="knote" style="margin-bottom:6px">B 的原点：在 A 里是 (2.2, 0)，补 1 写成 (2.2, 0, 1)，用 T_WA 乘它：</div><div class="krow"><div>${mat(WA)} × <div class="km" style="grid-template-columns:auto"><div class="kc2">2.20</div><div class="kc2">0.00</div><div class="kcb">1.00</div></div></div>
+   <div class="kcal">x = ${f(c)}×2.2 + ${fp(-s)}×0 + 0.30×1 = <b>${f(r[0])}</b><br>y = ${f(s)}×2.2 + ${f(c)}×0 + 0.30×1 = <b>${f(r[1])}</b></div></div>
+   <div class="knote" style="margin-top:6px">B 的原点在世界里是 (${f(r[0])}, ${f(r[1])})。拖到 100% 对照画面里 B 的位置。</div>`}
+  else if(step===3){const bx=mv(WA,[c2,s2,0]),by=mv(WA,[-s2,c2,0]);
+   h=`<div class="krow"><div class="kcal"><span style="color:${CX}">B 的 x 轴</span>：在 A 里是 (${f(c2)}, ${f(s2)}, <b>0</b>)<br>x = ${f(c)}×${f(c2)} + ${fp(-s)}×${f(s2)} + 0.30×<b>0</b> = <b>${f(bx[0])}</b><br>y = ${f(s)}×${f(c2)} + ${f(c)}×${f(s2)} + 0.30×<b>0</b> = <b>${f(bx[1])}</b></div>
+   <div class="kcal"><span style="color:${CY}">B 的 y 轴</span>：在 A 里是 (${f(-s2)}, ${f(c2)}, <b>0</b>)<br>x = ${f(c)}×${fp(-s2)} + ${fp(-s)}×${f(c2)} + 0.30×<b>0</b> = <b>${f(by[0])}</b><br>y = ${f(s)}×${fp(-s2)} + ${f(c)}×${f(c2)} + 0.30×<b>0</b> = <b>${f(by[1])}</b></div></div>
+   <div class="knote" style="margin-top:6px">箭头只是方向，跟它画在哪无关，所以第 3 个数是 0，乘上去 0.30×0 = 0，平移被挡掉了。</div>`}
+  else{h=`<div class="krow" style="align-items:center"><div><div class="knote">T_WA</div>${mat(WA,-1)}</div><div>×</div><div><div class="knote">T_AB</div>${mat(AB)}</div><div>=</div><div><div class="knote">T_WB（B 在世界里）</div>${mat(WB)}</div></div>
+   <div class="knote" style="margin-top:8px"><span style="color:${CX}">■</span> T_WA × T_AB 的第 1 列 → T_WB 的第 1 列：B 的 x 轴在世界里朝哪（第 ④ 步）<br><span style="color:${CY}">■</span> T_WA × T_AB 的第 2 列 → T_WB 的第 2 列：B 的 y 轴在世界里朝哪（第 ④ 步）<br><span style="color:${CT}">■</span> T_WA × T_AB 的第 3 列 → T_WB 的第 3 列：B 的原点在世界里的位置（第 ③ 步）<br>顺便看到：B 在世界里总共转了 θ₁ + θ₂ = ${(+$('a1').value)+(+$('a2').value)}°，cos 是 ${f(WB[0][0])}。</div>`}}
+ $('panel').innerHTML=h}
+function setStep(i){step=i;$('title').textContent=S[i][0];$('desc').textContent=S[i][1];$('gs').style.display=i===2?'flex':'none';
+ $('pills').innerHTML=S.map((_,k)=>`<span class="pill ${k===i?'on':''}" data-k="${k}">${k+1}</span>`).join('');
+ $('pills').querySelectorAll('.pill').forEach(p=>p.onclick=()=>setStep(+p.dataset.k));draw()}
+$('prev').onclick=()=>setStep((step+4)%5);$('next').onclick=()=>setStep((step+1)%5);
+[['a1','°'],['a2','°'],['ss','%']].forEach(([id,u])=>$(id).oninput=()=>{$(id+'O').textContent=$(id).value+u;draw()});
+function loop(){if(!playing)return;let v=+$('ss').value+1;if(v>100){v=100;playing=false;$('play').textContent='播放'}$('ss').value=v;$('ssO').textContent=v+'%';draw();if(playing)requestAnimationFrame(loop)}
+$('play').onclick=()=>{if(+$('ss').value>=100)$('ss').value=0;playing=!playing;$('play').textContent=playing?'暂停':'播放';if(playing)loop()};
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+setStep(0);
+})();
+</script>
+</body>
+</html>
